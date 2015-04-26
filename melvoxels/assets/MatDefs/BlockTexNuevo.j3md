@@ -1,0 +1,21 @@
+MaterialDef Colored Textured {
+
+    MaterialParameters {
+        Texture2D ColorMap
+        Color Color (Color)
+    }
+
+    Technique {
+        VertexShader GLSL100:   MatDefs/BlockTexNuevo.vert
+        FragmentShader GLSL100: MatDefs/BlockTexNuevo.frag
+
+        WorldParameters {
+            WorldViewMatrix
+            ProjectionMatrix
+        }
+    }
+
+    Technique {
+    }
+
+}
