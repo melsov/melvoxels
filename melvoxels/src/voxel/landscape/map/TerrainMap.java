@@ -212,31 +212,46 @@ public class TerrainMap implements IBlockDataProvider
         sunLightmap.writeRaysToFile(Coord2.FromCoord3XZ(chunkPos));
     }
 
-    public boolean removeColumn(ICoordXZ iCoordXZ) {
-        boolean columnNotWriteDirty = true;
-        for (Coord3 chunkPos : new ColumnRange(iCoordXZ)) {
-            Chunk ch = GetChunk(chunkPos);
-            if (ch == null) {
-                continue;
-            }
-            if (ch.isWriteDirty()) {
-                columnNotWriteDirty = false;
-                continue;
-            }
-            chunks.Remove(chunkPos);
-            sunLightmap.RemoveLightData(chunkPos);
-            lightmap.RemoveLightData(chunkPos);
-            // TODO: remove water data
-            ch.getChunkBrain().clearMeshBuffers();
-            ch.getChunkBrain().detachNodeFromParent();
-            ch.getChunkBrain().setSpatialNull();
-//            DebugGeometry.AddRemoveChunk(ch.position);
+    public void removeColumn(ICoordXZ iCoordXZ) {
+        if (!columnEmpty(iCoordXZ)) return;
+        sunLightmap.RemoveRays(iCoordXZ.getX(), iCoordXZ.getZ());
+        app.getColumnMap().Destroy(iCoordXZ.getX(), iCoordXZ.getZ());
+    }
+    
+    public void removeChunk(Coord3 chunkPos) {
+    	Chunk ch = GetChunk(chunkPos);
+        if (ch == null) {
+            return;
+        }
+        if (ch.isWriteDirty()) {
+            return;
+        }
+        chunks.Remove(chunkPos);
+        sunLightmap.RemoveLightData(chunkPos);
+        lightmap.RemoveLightData(chunkPos);
+        // TODO: remove water data
+        ch.getChunkBrain().clearMeshBuffers();
+        ch.getChunkBrain().detachNodeFromParent();
+        ch.getChunkBrain().setSpatialNull();
+    }
 
+    public boolean columnHasHiddenChunk(ICoordXZ look) {
+        for (Coord3 coord3 : new ColumnRange(look)) {
+            Chunk chunk = GetChunk(coord3);
+            if (chunk != null && chunk.getChunkBrain().isHiding()) {
+                return true;
+            }
         }
-        if (columnNotWriteDirty) {
-            sunLightmap.RemoveRays(iCoordXZ.getX(), iCoordXZ.getZ());
+        return false;
+    }
+    public boolean columnEmpty(ICoordXZ look) {
+        for (Coord3 coord3 : new ColumnRange(look)) {
+            Chunk chunk = GetChunk(coord3);
+            if (chunk != null) {
+                return false;
+            }
         }
-        return columnNotWriteDirty;
+        return true;
     }
 
 	/*
@@ -300,7 +315,7 @@ public class TerrainMap implements IBlockDataProvider
     }
     public void addCoordsInColumn(HashSet<Coord3> coord3HashSet,int x, int z) {
         for (Coord3 chunkPos = new Coord3(x, MAX_CHUNK_DIM_VERTICAL - 1, z); chunkPos.y >= MIN_CHUNK_DIM_VERTICAL; chunkPos.y--) {
-            coord3HashSet.add(chunkPos);
+            coord3HashSet.add(chunkPos.clone());
         }
     }
 
@@ -853,23 +868,5 @@ public class TerrainMap implements IBlockDataProvider
     }
 
 
-    public boolean columnHasHiddenChunk(ICoordXZ look) {
-        for (Coord3 coord3 : new ColumnRange(look)) {
-            Chunk chunk = GetChunk(coord3);
-            if (chunk != null && chunk.getChunkBrain().isHiding()) {
-                return true;
-            }
-        }
-        return false;
-    }
-    public boolean columnEmpty(ICoordXZ look) {
-        for (Coord3 coord3 : new ColumnRange(look)) {
-            Chunk chunk = GetChunk(coord3);
-            if (chunk != null) {
-                return false;
-            }
-        }
-        return true;
-    }
     
 }

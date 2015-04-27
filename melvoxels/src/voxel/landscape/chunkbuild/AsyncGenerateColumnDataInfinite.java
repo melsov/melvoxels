@@ -4,10 +4,12 @@ import voxel.landscape.VoxelLandscape;
 import voxel.landscape.collection.ColumnMap;
 import voxel.landscape.coord.Coord2;
 import voxel.landscape.coord.Coord3;
+import voxel.landscape.debug.DebugGeometry;
 import voxel.landscape.map.TerrainMap;
 import voxel.landscape.map.structure.StructureBuilder;
 import voxel.landscape.noise.TerrainDataProvider;
 import voxel.landscape.player.B;
+import voxel.landscape.util.Asserter;
 
 import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
@@ -57,8 +59,9 @@ public class AsyncGenerateColumnDataInfinite implements Runnable // extends Resp
             if (columnMap.SetIsBuildingOrReturnFalseIfStartedAlready(x,z)) {
                 touchedChunkCoords.clear();
                 terrainMap.generateSurface(x, z, dataProvider, touchedChunkCoords);
+//                DebugAssertChunkInMap(touchedChunkCoords);
                 structureBuilder.addStructures(colCoord, terrainMap, dataProvider, touchedChunkCoords);
-
+//                DebugAssertChunkInMap(touchedChunkCoords);
                 //WE MAY HAVE CRAWLED BACK OVER AN ALREADY PROCESSED COLUMN
                 //WE COULD BE ITERATING OVER ITS ENTIRE X,Z SURFACE WHEN (SAY) ONLY
                 //ONE X,Z HEIGHT COORD WAS CHANGED. THIS SEEMS WASTEFUL BUT, TO GET AROUND
@@ -83,6 +86,13 @@ public class AsyncGenerateColumnDataInfinite implements Runnable // extends Resp
 
                 terrainMap.updateChunksToBeFlooded(touchedChunkCoords);
             }
+        }
+    }
+    
+    private void DebugAssertChunkInMap(HashSet<Coord3> chunkCoords) {
+    	Object[] chunkCos = chunkCoords.toArray();
+        for (Object coord : chunkCos) {
+        	Asserter.assertTrue(terrainMap.GetChunk((Coord3) coord) != null , "not in map: " + coord.toString());
         }
     }
 

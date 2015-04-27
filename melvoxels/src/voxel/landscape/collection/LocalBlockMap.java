@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class LocalBlockMap implements Serializable {
 
     public HashMap<ChunkLocalCoord, Integer> map;  // public for testing: make private
-    public final AtomicBoolean writeDirty = new AtomicBoolean(true);
+    public final AtomicBoolean writeDirty = new AtomicBoolean(false);
 
     public LocalBlockMap(Coord3 _size) {
         map = new HashMap<ChunkLocalCoord, Integer >(_size.x * _size.z * 2);
@@ -60,7 +60,6 @@ public class LocalBlockMap implements Serializable {
      * Read / Write
      */
     public void readFromFile(Coord3 position) {
-        if (!writeDirty.get()) return;
         Object mapO = FileUtil.DeserializeChunkObject(position, FileUtil.LocalBlockMapExtension);
         if (mapO != null) {
             map = (HashMap<ChunkLocalCoord, Integer>) mapO;

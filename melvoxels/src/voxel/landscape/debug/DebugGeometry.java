@@ -113,14 +113,20 @@ public class DebugGeometry
      */
     public static void AddAddChunk(Coord3 position) {
     	if (!addChunks.containsKey(position) && addChunkNode.getChild("box" + Chunk.ToWorldPosition(position).toString()) == null) {
-	        Geometry g = makeChunkBox(position, ColorRGBA.Orange, true);
+	        Geometry g = makeChunkBox(position, ColorRGBA.Orange, false);
 	        addChunks.put(position, g);
     	}
     }
     public static void AddRemoveChunk(Coord3 position) {
     	if (!removeChunks.containsKey(position) && removeChunkNode.getChild("box" + Chunk.ToWorldPosition(position).toString()) == null) {
-	        Geometry g = makeChunkBox(position, ColorRGBA.Blue, true);
+	        Geometry g = makeChunkBox(position, ColorRGBA.Blue, false);
 	        removeChunks.put(position, g);
+    	}
+    }
+    public static void AddChunk(Coord3 position, ColorRGBA color) {
+    	if (!addChunks.containsKey(position) && addChunkNode.getChild("box" + Chunk.ToWorldPosition(position).toString()) == null) {
+    		Geometry g = makeChunkBox(position, color, false);
+	        addChunks.put(position, g);
     	}
     }
     private static Geometry makeChunkBox(Coord3 position, ColorRGBA color, boolean solid) {

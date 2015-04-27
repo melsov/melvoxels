@@ -3,11 +3,14 @@ package voxel.landscape.collection.coordmap.managepages;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+
 import voxel.landscape.Chunk;
+import voxel.landscape.collection.ColumnMap;
 import voxel.landscape.coord.ColumnRange;
 import voxel.landscape.coord.Coord3;
 import voxel.landscape.coord.ICoordXZ;
 import voxel.landscape.map.TerrainMap;
+import voxel.landscape.player.B;
 import voxel.landscape.settings.BuildSettings;
 
 import java.util.ArrayList;
@@ -51,7 +54,8 @@ public class FurthestChunkFinder
         return (Coord3)furthestXZ;
     }
 
-    public List<Coord3> outsideOfAddRangeChunks(TerrainMap map, Camera cam, Object[] columnCoords) {
+    public List<Coord3> outsideOfAddRangeChunks(TerrainMap map, Camera cam, ColumnMap columnMap) {
+    	Object[] columnCoords = columnMap.getCoordXZSet().toArray();
         List<Coord3> result = new ArrayList<>(columnCoords.length);
         if (columnCoords.length == 0) return null;
         if (!(columnCoords[0] instanceof ICoordXZ)) return null;

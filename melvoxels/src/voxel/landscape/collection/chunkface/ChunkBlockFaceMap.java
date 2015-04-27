@@ -8,6 +8,7 @@ import voxel.landscape.chunkbuild.blockfacefind.BlockFaceRecord;
 import voxel.landscape.chunkbuild.blockfacefind.ChunkLocalCoord;
 import voxel.landscape.coord.Coord3;
 import voxel.landscape.coord.Direction;
+import voxel.landscape.debug.DebugGeometry;
 import voxel.landscape.fileutil.FileUtil;
 import voxel.landscape.map.TerrainMap;
 import voxel.landscape.util.Asserter;
@@ -27,7 +28,7 @@ public class ChunkBlockFaceMap implements Serializable {
 
     private volatile ConcurrentHashMap<ChunkLocalCoord, BlockFaceRecord> faces = new ConcurrentHashMap<>(16*16*4);
     public volatile boolean meshDirty; //True if a face has been deleted and map hasn't yet re-meshed
-    public final AtomicBoolean writeDirty = new AtomicBoolean(true);
+    public final AtomicBoolean writeDirty = new AtomicBoolean(false);
 
     private Map<ChunkLocalCoord, BlockFaceRecord> getFaces() {
         return faces;
@@ -53,6 +54,11 @@ public class ChunkBlockFaceMap implements Serializable {
                 chunkBlockFaceMap = this;
             } else {
                 Chunk neighbor = map.GetChunk(Chunk.ToChunkPosition(globalNudge));
+                //#DEBUG
+                if (neighbor == null) {
+	                DebugGeometry.AddRemoveChunk(Chunk.ToChunkPosition(globalNudge));
+	                continue;
+                }
                 Asserter.assertTrue(neighbor != null, "null chunk!"); // TODO: FIX NULL P EXCEPTION HERE
                 chunkBlockFaceMap = neighbor.chunkBlockFaceMap;
             }
@@ -205,6 +211,7 @@ public class ChunkBlockFaceMap implements Serializable {
     }
 
     public void writeToFile(Coord3 position) {
+    	if (!writeDirty.get()) return;
         try {
             FileUtil.SerializeChunkObject(faces, position, FileUtil.ChunkBlockFaceMapExtension);
         } catch (IOException e) {
@@ -212,7 +219,6 @@ public class ChunkBlockFaceMap implements Serializable {
             return;
         }
         writeDirty.set(false);
-        meshDirty = true;
     }
 
 }

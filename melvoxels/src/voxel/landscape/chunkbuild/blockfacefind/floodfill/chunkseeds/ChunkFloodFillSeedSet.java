@@ -18,7 +18,7 @@ public class ChunkFloodFillSeedSet implements Serializable {
     private Coord3 chunkCoord;
     public Coord3 getChunkCoord() { return chunkCoord; }
     private ArrayList<ChunkFloodFillSeedBlob3D> seeds = new ArrayList<>(7);
-    public final AtomicBoolean writeDirty = new AtomicBoolean(true);
+    public final AtomicBoolean writeDirty = new AtomicBoolean(false);
 
     public ChunkFloodFillSeedSet(Coord3 _chunkCoord) {
         chunkCoord = _chunkCoord;
@@ -75,6 +75,7 @@ public class ChunkFloodFillSeedSet implements Serializable {
     }
 
     public void writeToFile(Coord3 position) {
+    	if (!writeDirty.get()) return;
         try {
             FileUtil.SerializeChunkObject(seeds, position, FileUtil.ChunkFloodFillSeedSetExtension);
         } catch (IOException e) {

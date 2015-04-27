@@ -45,7 +45,7 @@ public class StructureBuilder {
             for(int x=x1; x<x2; x++) {
                 surfaceY = map.getSurfaceHeight(x, z);
                 Coord3 global = new Coord3(x, surfaceY, z);
-                Chunk originChunk = map.lookupOrCreateChunkAtPosition(global);
+                Chunk originChunk = map.lookupOrCreateChunkAtPosition(Chunk.ToChunkPosition(global));
                 if (originChunk != null) {
                     gotStructureChunks.add(originChunk);
                     if (originChunk.hasAddedStructures.get()) {

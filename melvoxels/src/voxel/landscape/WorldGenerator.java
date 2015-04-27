@@ -1,6 +1,7 @@
 package voxel.landscape;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 
@@ -44,7 +45,7 @@ public class WorldGenerator {
     //Chunk disposal
     private BlockingQueue<Coord3> unloadChunks = new LinkedBlockingQueue<>(540);
     private BlockingQueue<Coord3> deletableChunks = new LinkedBlockingQueue<>(540);
-    ExecutorService chunkUnloadService;
+    ExecutorService chunkUnloadService;  
 
     private static final int COLUMN_DATA_BUILDER_THREAD_COUNT = 1;
     private static final int CHUNK_MESH_BUILD_THREAD_COUNT = 1;
@@ -177,12 +178,14 @@ public class WorldGenerator {
             if (!columnsToBeBuilt.contains(column) && !columnMap.IsBuiltOrIsBuilding(emptyCol.x, emptyCol.z)) {
                 columnsToBeBuilt.add(new Coord2(emptyCol.x, emptyCol.z));
             } else {
-                for (Coord3 coord3 : new ColumnRange(emptyCol)) {
-                    Chunk chunk = map.GetChunk(coord3);
-                    if (chunk != null && chunk.canUnhide()) {
-                    	attachMeshToScene(chunk);
-                    }
-                }
+            	if (BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), emptyCol)) {
+	                for (Coord3 coord3 : new ColumnRange(emptyCol)) {
+	                    Chunk chunk = map.GetChunk(coord3);
+	                    if (chunk != null && chunk.canUnhide()) {
+	                    	attachMeshToScene(chunk);
+	                    }
+	                }
+            	}
             }
             if (columnsToBeBuilt.size() > 300) {
             	Asserter.assertFalseAndDie("columns to be built size: " + columnsToBeBuilt.size());
@@ -217,6 +220,10 @@ public class WorldGenerator {
             Coord3 chunkCoord = shortOrderBlockFaceFinder.floodFilledChunkCoords.poll();
             if (chunkCoord == null) chunkCoord = blockFaceFinder.floodFilledChunkCoords.poll();
             if (chunkCoord == null) { return; }
+            if (map.GetChunk(chunkCoord) == null) {
+            	DebugGeometry.AddAddChunk(chunkCoord);
+            	return;
+            }
             Asserter.assertTrue(map.GetChunk(chunkCoord) != null, "chunk not in map! at chunk coord: " + chunkCoord.toString());
             buildThisChunk(map.GetChunk(chunkCoord));
         }
@@ -244,7 +251,7 @@ public class WorldGenerator {
     }
 
     private void renderChunks() {
-        for (int count = 0; count < 20; ++count) {
+        for (int count = 0; count < 5; ++count) {
             ChunkMeshBuildingSet chunkMeshBuildingSet = completedChunkMeshSets.poll();
             if (chunkMeshBuildingSet == null) continue;
 
@@ -254,6 +261,11 @@ public class WorldGenerator {
                 continue;
             }
             Chunk chunk = map.GetChunk(chunkMeshBuildingSet.chunkPosition);
+            if (chunk == null) {
+            	B.bugln("null chunk: render chunks");
+            	DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Magenta);
+            	continue;
+            }
             Asserter.assertTrue(chunk != null, "null chunk in check async...");
             chunk.getChunkBrain().applyMeshBuildingSet(chunkMeshBuildingSet);
         }
@@ -269,8 +281,7 @@ public class WorldGenerator {
         removeChunks();
     }
     private void unloadChunks() {
-        for (Coord3 chunkCoord : furthestChunkFinder.outsideOfAddRangeChunks(map, camera, columnMap.getCoordXZSet().toArray())) {
-            if (chunkCoord == null) continue;
+        for (Coord3 chunkCoord : furthestChunkFinder.outsideOfAddRangeChunks(map, camera, columnMap)) {
             if (!BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), chunkCoord)) {
                 slateForUnload(map.GetChunk(chunkCoord));
             }
@@ -278,7 +289,12 @@ public class WorldGenerator {
     }
     private void slateForUnload(Chunk chunk) {
         if (chunk == null) { return; }
-        
+        if (!columnMap.IsBuilt(chunk.position.x, chunk.position.z)) {
+//        	B.bugln("col not built: " + chunk.position.toString());
+        }
+        if (!chunk.isWriteDirty()) {
+//        	DebugGeometry.AddAddChunk(chunk.position);
+        }
         if (chunk.isWriteDirty()) {
 	        if (!unloadChunks.contains(chunk.position) && !chunk.hasStartedWriting.get()) {
 	        	if (unloadChunks.remainingCapacity() > 0) {
@@ -301,16 +317,17 @@ public class WorldGenerator {
     }
     private void removeChunks() {
         while(deletableChunks.size() > 0) {
-            Coord3 chunkCoord = deletableChunks.poll();
-            if (chunkCoord == null) continue;
-            if (BuildSettings.ChunkCoordWithinPrepareRadius(camera.getLocation(), chunkCoord)) {
-                continue;
-            }
-
-            if (map.removeColumn(chunkCoord)) {
-                columnMap.Destroy(chunkCoord.getX(), chunkCoord.getZ());
-            }
+            removeChunk(deletableChunks.poll());
         }
+    }
+    private void removeChunk(Coord3 chunkCoord) {
+    	if (chunkCoord == null) return;
+        if (BuildSettings.ChunkCoordWithinPrepareRadius(camera.getLocation(), chunkCoord)) {
+            return;
+        }
+
+        map.removeChunk(chunkCoord);
+        map.removeColumn(chunkCoord);
     }
 
     /*

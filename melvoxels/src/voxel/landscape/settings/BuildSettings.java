@@ -9,7 +9,7 @@ import voxel.landscape.coord.*;
  */
 public class BuildSettings {
 
-    public static int ADD_COLUMN_RADIUS = 2;
+    public static int ADD_COLUMN_RADIUS = 3;
     public static int PREPARE_COLUMN_RADIUS = ADD_COLUMN_RADIUS + 1;
     public static int STORE_COLUMN_RADIUS = PREPARE_COLUMN_RADIUS + 2;
 
@@ -40,6 +40,9 @@ public class BuildSettings {
     }
     public static Box2 addColumnsBox(Vector3f camera) {
         return cameraCenteredBox(camera, AddBox);
+    }
+    public static Box2 prepareColumnsBox(Vector3f camera) {
+    	return cameraCenteredBox(camera, PrepareBox);
     }
     public static BoxBorder2 prepareColumnsBorder(Vector3f camera) {
         return cameraCenteredBoxOuterBorder(camera, AddBox, PREPARE_COLUMN_RADIUS - ADD_COLUMN_RADIUS);

@@ -41,7 +41,9 @@ public class ChunkBrain extends AbstractControl implements Cloneable, Savable, T
 	    	Mesh mesh = g.getMesh();
 	    	if (mesh != null) {
 		    	VertexBuffer vb = mesh.getBuffer(Type.Position);
-		    	if (vb.getNumComponents() > 0) return true;
+		    	if (vb != null) {
+			    	if (vb.getNumComponents() > 0) return true;
+		    	}
 	    	}
     	}
     	g = getWaterGeometryUnsafe();
@@ -49,7 +51,9 @@ public class ChunkBrain extends AbstractControl implements Cloneable, Savable, T
 	    	Mesh mesh = g.getMesh();
 	    	if (mesh != null) {
 		    	VertexBuffer vb = mesh.getBuffer(Type.Position);
-		    	if (vb.getNumComponents() > 0) return true;
+		    	if (vb != null) {
+			    	if (vb.getNumComponents() > 0) return true;
+		    	}
 	    	}
     	}
     	return false;

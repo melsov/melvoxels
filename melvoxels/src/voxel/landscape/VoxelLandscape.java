@@ -89,7 +89,7 @@ public class VoxelLandscape extends SimpleApplication
             SHOW_COLUMN_DEBUG_QUADS = false;
             TEST_BLOCK_FACE_MESH_BUILDING = false;
             FORCE_WIRE_FRAME = true;
-            BUILD_STRUCTURES = true;
+            BUILD_STRUCTURES = false;
         } else {
             USE_TEXTURE_MAP = true;
             DEBUG_INFO_ON = false;
@@ -102,7 +102,7 @@ public class VoxelLandscape extends SimpleApplication
             SHOW_COLUMN_DEBUG_QUADS = false;
             TEST_BLOCK_FACE_MESH_BUILDING = true;
             FORCE_WIRE_FRAME = true;
-            BUILD_STRUCTURES = true;
+            BUILD_STRUCTURES = false;
         }
     }
 

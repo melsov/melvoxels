@@ -22,15 +22,14 @@ public class ColumnMap {
 //        GetColumnChunk(x, z).buildStatus.set (BuildStatus.WRITING_DATA.ordinal());
 //    }
 
-	public void SetBuilt(int x, int z) {
-		GetColumnChunk(x, z).buildStatus.set (BuildStatus.BUILT_DATA.ordinal());
-	}
-
     public void SetBuildingData(int x, int z) {
         GetColumnChunk(x, z).buildStatus.set(BuildStatus.BUILDING_DATA.ordinal());
     }
 	public void SetBuiltSurface(int x, int z) {
 		GetColumnChunk(x, z).buildStatus.set(BuildStatus.BUILT_SURFACE_DATA.ordinal());
+	}
+	public void SetBuilt(int x, int z) {
+		GetColumnChunk(x, z).buildStatus.set (BuildStatus.BUILT_DATA.ordinal());
 	}
 
     public synchronized boolean SetIsBuildingOrReturnFalseIfStartedAlready(int x, int z) {
@@ -61,11 +60,19 @@ public class ColumnMap {
 //    public boolean IsWritingData(int x, int z) {
 //        return GetColumnChunk(x, z).buildStatus.get() == BuildStatus.WRITING_DATA.ordinal();
 //    }
-	public boolean IsBuilt(int x, int z) {
-		return GetColumnChunk(x, z).buildStatus.get() >= BuildStatus.BUILT_DATA.ordinal();
+    public boolean IsBuilt(int x, int z) {
+    	return IsBuilt(new Coord2(x,z));
+    }
+	public boolean IsBuilt(Coord2 column) {
+		if (UnsafeGet(column) == null) return false;
+		return GetColumnChunk(column).buildStatus.get() >= BuildStatus.BUILT_DATA.ordinal();
 	}
     public boolean HasNotBeenStarted(int x, int z) {
-        return GetColumnChunk(x, z).buildStatus.get() == BuildStatus.HAS_NOT_BEEN_TOUCHED.ordinal();
+    	return HasNotBeenStarted(new Coord2 (x,z));
+    }
+    public boolean HasNotBeenStarted(Coord2 column) {	
+    	if (UnsafeGet(column) == null) return false;
+        return GetColumnChunk(column).buildStatus.get() == BuildStatus.HAS_NOT_BEEN_TOUCHED.ordinal();
     }
     public boolean IsBuiltOrIsBuilding(int x, int z) {
         return GetColumnChunk(x, z).buildStatus.get() > BuildStatus.HAS_NOT_BEEN_TOUCHED.ordinal();
@@ -104,7 +111,13 @@ public class ColumnMap {
 	}
 
 	private ColumnChunk GetColumnChunk(int x, int z) {
-		return columns.GetInstance(x, z);
+		return GetColumnChunk(new Coord2(x,z));
+	}
+	private ColumnChunk GetColumnChunk(Coord2 column) {
+		return columns.GetInstance(column);
+	}
+	private ColumnChunk UnsafeGet(Coord2 column) {
+		return columns.Get(column);
 	}
 
 
