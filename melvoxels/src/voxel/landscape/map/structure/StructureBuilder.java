@@ -32,7 +32,6 @@ public class StructureBuilder {
         if (map.columnChunksBuiltFromFile(chunkColumn.getX(), chunkColumn.getZ())) {
             return;
         }
-        // TODO: chunk noise map (utility noise)
         // TODO: CONSIDER: are we deleting light and water map data when we delete chunks?
         int x1 = chunkColumn.getX() * Chunk.CHUNKDIMS.x;
         int z1 = chunkColumn.getZ() * Chunk.CHUNKDIMS.z;

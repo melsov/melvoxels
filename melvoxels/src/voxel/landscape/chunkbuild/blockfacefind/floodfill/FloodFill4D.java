@@ -115,8 +115,7 @@ public class FloodFill4D implements Runnable
     }
     private synchronized void putDirtyChunks() { //stab in the dark : 'synchronized'
         if (floodFill.dirtyChunks.size() == 0) return;
-        Coord3[] dirtyChunks = new Coord3[floodFill.dirtyChunks.size()];
-        dirtyChunks = floodFill.dirtyChunks.toArray(dirtyChunks);
+		Coord3[] dirtyChunks = floodFill.dirtyChunks.toArray(new Coord3[floodFill.dirtyChunks.size()]);
         for(Coord3 dirty : dirtyChunks) {
             try { floodFilledChunkCoords.put(dirty); } catch (InterruptedException e) { e.printStackTrace(); }
             floodFill.dirtyChunks.remove(dirty);
@@ -159,7 +158,7 @@ public class FloodFill4D implements Runnable
                 if (inBoundsBag.size() == 0) {
                     break depleteBag;
                 }
-                // find a slice whose column IS_BUILT
+                // find a slice whose column is SURFACE_BUILT
                 List<ChunkSlice> iBBSlices = inBoundsBag.getSlices();
                 for(int i = 0; i < iBBSlices.size(); ++i) {
                     ChunkSlice slice = iBBSlices.remove(i); // iBBSlices.get(i);
@@ -169,7 +168,7 @@ public class FloodFill4D implements Runnable
                         chunkSlice = slice;
                         break;
                     } else {
-                        outOfBoundsBag.add(slice); //TODO: figure how to handle out of bounds becoming inbounds
+                        outOfBoundsBag.add(slice); 
                         --i;
                     }
                 }
@@ -193,41 +192,14 @@ public class FloodFill4D implements Runnable
         }
     }
 
-    private Box boundsFromGlobal(Vector3f global) {
-        return boundsFromChunkCoord(Chunk.ToChunkPosition(Coord3.FromVector3f(global)));
-    }
-    private Box boundsFromChunkCoord(Coord3 chunkCo) {
-//        return new Box(Coord3.Zero.clone(), new Coord3(8, 4, 8)); //TEST
-        return new Box(new Coord3(-20000, -100000, -20000), new Coord3(9000000, 9000000, 90000000)); //TEST
-//        Coord3 start = chunkCo.minus(FFBoundsHalf);
-//        start.y = Math.max(start.y, 0);
-//        return new Box(start, FFBoundsHalf.multy(2)); //WANT
-    }
-
-
-    private void debugPrintHashSet(HashSet<Coord3> coord3s, Box bounds) {
-        BoxIterator bi = new BoxIterator(bounds);
-        B.bugln("---COORDS---");
-        while(bi.hasNext()) {
-            Coord3 n = bi.next();
-            if (n.x == bounds.start.x) {
-                B.bugln("");
-            }
-            String r;
-            if (coord3s.contains(n)) {
-                r = "X-";
-            } else {
-                r = "0-";
-            }
-            B.bug(r);
-        }
-        B.bugln("");
-    }
-
     private void initializeChunkShell(ChunkSlice[] chunkSlices, Coord3 globalBlockCoord) {
         Coord3 chunkPosition = Chunk.ToChunkPosition(globalBlockCoord);
         for(int i = 0; i <= Direction.ZPOS; ++i) {
-            chunkSlices[i] = new ChunkSlice(chunkPosition.add(Direction.DirectionCoords[i]),i);
+        	Coord3 globalNeighbor = Chunk.ToWorldPosition(chunkPosition.add(Direction.DirectionCoords[i]));
+        	if (Direction.IsNegDir(i)) {
+        		globalNeighbor.setComponentInDirection(i, globalNeighbor.componentForDirection(i) + Chunk.XLENGTH - 1 );
+        	}
+            chunkSlices[i] = new ChunkSlice(i,globalNeighbor);
         }
     }
 

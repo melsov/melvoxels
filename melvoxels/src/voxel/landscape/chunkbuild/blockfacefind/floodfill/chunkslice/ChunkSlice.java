@@ -1,7 +1,9 @@
 package voxel.landscape.chunkbuild.blockfacefind.floodfill.chunkslice;
 
+import voxel.landscape.Chunk;
 import voxel.landscape.coord.Coord3;
 import voxel.landscape.coord.Direction;
+import voxel.landscape.util.Asserter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,15 +19,27 @@ public class ChunkSlice
 {
     private Coord3 chunkCoord;
     public Coord3 getChunkCoord() { return chunkCoord; }
-    private int direction;
+    private final int direction;
+    private final int planePositionGlobal;
+    public final Coord3 global;
     public int getDirection() { return direction; }
     private List<ChunkSliceBlockSet> blockSets = new ArrayList<ChunkSliceBlockSet>(3);
 
-    public ChunkSlice(Coord3 _chunkCoord, int _direction) {
-        chunkCoord = _chunkCoord; direction = _direction;
+    public ChunkSlice(int _direction, Coord3 global) {
+        chunkCoord = Chunk.ToChunkPosition(global); direction = _direction;
+        planePositionGlobal = global.componentForDirection(direction);
+        this.global = global;
+        
     }
+//    public ChunkSlice(Coord3 _chunkCoord, int _direction) {
+//        chunkCoord = _chunkCoord; direction = _direction;
+//    }
 
     public void addCoord(Coord3 global){
+    	Asserter.assertTrue(chunkCoord.equal(Chunk.ToChunkPosition(global)), "wrong chunk");
+    	Asserter.assertTrue(planePositionGlobal == global.componentForDirection(direction), 
+    			"wrong global position: global plane is at " + planePositionGlobal + " add coord: " 
+		    	+ global.toString() + "\nfor direction: " + Direction.ToString(direction) );
         ChunkSliceBlockSet addedToSliceBlockSet = null;
         for (int i = 0; i < blockSets.size(); ++i) {
             ChunkSliceBlockSet chunkSliceBlockSet = blockSets.get(i);

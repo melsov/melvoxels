@@ -167,11 +167,9 @@ public class WorldGenerator {
      */
     private void addColumns() {
         if (columnsToBeBuilt == null) return;
-        // TODO: new approach. in each update, go over a list of all columns within the add radius
-        // TODO: clear columnsToBeBuilt, add all columns from the within-add-radius list
-//        Coord3 emptyCol = ChunkFinder.ClosestEmptyColumn(camera, map, columnMap, false);
-//        addColumn(emptyCol);
-
+// TODO: figure why using prepareColumnsBox() creates problems
+        // TODO: consider in some BlockingQueues etc. put (like ChunksToBeMeshed, FloodFilledChunks) put Chunks, not just their Coords
+        // would ensure that Chunks that wanted to be in memory still, still were in memory?
         for(Coord2 column : BuildSettings.addColumnsBox(camera.getLocation())) {
             Coord3 emptyCol = new Coord3(column.getX(), 0, column.getZ());
             removeFromUnloadLists(new Coord2(emptyCol.x, emptyCol.z));

@@ -59,19 +59,12 @@ public class AsyncGenerateColumnDataInfinite implements Runnable // extends Resp
             if (columnMap.SetIsBuildingOrReturnFalseIfStartedAlready(x,z)) {
                 touchedChunkCoords.clear();
                 terrainMap.generateSurface(x, z, dataProvider, touchedChunkCoords);
-//                DebugAssertChunkInMap(touchedChunkCoords);
                 structureBuilder.addStructures(colCoord, terrainMap, dataProvider, touchedChunkCoords);
-//                DebugAssertChunkInMap(touchedChunkCoords);
-                //WE MAY HAVE CRAWLED BACK OVER AN ALREADY PROCESSED COLUMN
-                //WE COULD BE ITERATING OVER ITS ENTIRE X,Z SURFACE WHEN (SAY) ONLY
-                //ONE X,Z HEIGHT COORD WAS CHANGED. THIS SEEMS WASTEFUL BUT, TO GET AROUND
-                //IT, WE'D NEED TO MAKE A PER-CHUNK 'DIRTY' HEIGHT COORD2 LIST: UGH?
                 columnMap.SetBuiltSurface(x, z);
                 removeSurfaceNotBuilt(touchedChunkCoords);
                 for (Coord2 col2 : columnsFromChunkCoords(touchedChunkCoords)) {
                     terrainMap.populateFloodFillSeedsUpdateFaceMapsInChunkColumn(col2.getX(), col2.getZ(), dataProvider, touchedChunkCoords);
                 }
-
                 if (!keepGoing.get()) break; //PREVENT FREEZE AT END OF RUN??
 
 //                ChunkSunLightComputer.Scatter(terrainMap, columnMap, x, z); //WANT

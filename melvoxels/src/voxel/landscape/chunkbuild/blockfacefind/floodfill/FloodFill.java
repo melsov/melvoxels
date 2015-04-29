@@ -45,8 +45,8 @@ public class FloodFill
 //        dirtyChunks.clear(); // dirty chunks keeps track of edited chunks
         dirtyChunks.add(Chunk.ToChunkPosition(seedGlobal));
 
-        ChunkSlice yPosChunkSlice = new ChunkSlice(Chunk.ToChunkPosition(seedGlobal), Direction.YPOS);
-        ChunkSlice yNegChunkSlice = new ChunkSlice(Chunk.ToChunkPosition(seedGlobal), Direction.YNEG);
+        ChunkSlice yPosChunkSlice = new ChunkSlice(Direction.YPOS, seedGlobal.add(Coord3.ypos));
+        ChunkSlice yNegChunkSlice = new ChunkSlice(Direction.YNEG, seedGlobal.add(Coord3.yneg));
         floodScanLines(chunkSliceShell,yPosChunkSlice, yNegChunkSlice, seedGlobal, FloodFill4D.UntouchedType);
         List<ChunkSlice> slices = new ArrayList<ChunkSlice>(25);
         slices.add(yNegChunkSlice);
@@ -54,8 +54,9 @@ public class FloodFill
 
         while(slices.size() > 0) {
             ChunkSlice nextSlice = slices.remove(0);
-            ChunkSlice yPosChunkSliceNext = new ChunkSlice(Chunk.ToChunkPosition(seedGlobal), Direction.YPOS);
-            ChunkSlice yNegChunkSliceNext = new ChunkSlice(Chunk.ToChunkPosition(seedGlobal), Direction.YNEG);
+            ChunkSlice yPosChunkSliceNext = new ChunkSlice(Direction.YPOS, nextSlice.global.add(Coord3.ypos));
+            ChunkSlice yNegChunkSliceNext = new ChunkSlice(Direction.YNEG, nextSlice.global.add(Coord3.yneg));
+            //TODO: bug fix: logic fix: chunkSliceShell is the wrong chunk slice shell if we move to another chunk.
             while(nextSlice.size() > 0) {
                 floodScanLines(chunkSliceShell, yPosChunkSliceNext, yNegChunkSliceNext, nextSlice.removeNext(), FloodFill4D.UntouchedType );
             }

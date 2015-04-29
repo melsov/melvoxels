@@ -26,6 +26,5 @@ public class Asserter {
             System.out.println("null chunk at: " + coord3.toString());
             assertFalseAndDie("exiting");
         }
-
     }
 }
