@@ -59,6 +59,7 @@ public class VoxelLandscape extends SimpleApplication
             CULLING_ON = false, BUILD_INITIAL_CHUNKS = true, DONT_BUILD_CHUNK_MESHES = true, SHOW_COLUMN_DEBUG_QUADS = false, FORCE_WIRE_FRAME = false,
             BUILD_STRUCTURES = true;
     public static boolean TEST_BLOCK_FACE_MESH_BUILDING = true;
+    public static boolean READ_CHUNKS_FROM_FILE = false;
     public static boolean TESTING_DEBUGGING_ON = false, DO_USE_TEST_GEOMETRY = true, SHOULD_BUILD_CHUNK_MESH_ASYNC = true;
 
     private WorldGenerator worldGenerator;
@@ -89,7 +90,8 @@ public class VoxelLandscape extends SimpleApplication
             SHOW_COLUMN_DEBUG_QUADS = false;
             TEST_BLOCK_FACE_MESH_BUILDING = false;
             FORCE_WIRE_FRAME = true;
-            BUILD_STRUCTURES = true;
+            BUILD_STRUCTURES = false;
+            READ_CHUNKS_FROM_FILE = false;
         } else {
             USE_TEXTURE_MAP = true;
             DEBUG_INFO_ON = false;
@@ -103,6 +105,7 @@ public class VoxelLandscape extends SimpleApplication
             TEST_BLOCK_FACE_MESH_BUILDING = true;
             FORCE_WIRE_FRAME = true;
             BUILD_STRUCTURES = true;
+            READ_CHUNKS_FROM_FILE = false;
         }
     }
 
@@ -225,8 +228,11 @@ public class VoxelLandscape extends SimpleApplication
         inputManager.addMapping("ToggleInfoView", new KeyTrigger(KeyInput.KEY_R));
         inputManager.addMapping("ToggleInfoViewDistance", new KeyTrigger(KeyInput.KEY_F));
         inputManager.addMapping("DebugBlock", new KeyTrigger(KeyInput.KEY_B));
-        inputManager.addListener(player.getUserInputListener(), "Break", "Place", "GoHome", "Up", "Down", "Right", "Left",
-                "UpArrow", "DownArrow", "RightArrow", "LeftArrow", "Inventory", "ToggleInfoView", "ToggleInfoViewDistance", "DebugBlock");
+        inputManager.addMapping("DebugChunk", new KeyTrigger(KeyInput.KEY_C));
+        inputManager.addListener(player.getUserInputListener(), 
+        		"Break", "Place", "GoHome", "Up", "Down", "Right", "Left",
+                "UpArrow", "DownArrow", "RightArrow", "LeftArrow", "Inventory", 
+                "ToggleInfoView", "ToggleInfoViewDistance", "DebugBlock", "DebugChunk");
 
         inputManager.addMapping("moveForward",  new KeyTrigger(keyInput.KEY_W));
         inputManager.addMapping("moveBackward",  new KeyTrigger(keyInput.KEY_S));

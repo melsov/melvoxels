@@ -1,6 +1,8 @@
 package voxel.landscape.coord;
 
 import com.jme3.math.Vector3f;
+
+import voxel.landscape.Chunk;
 import voxel.landscape.util.Asserter;
 
 import java.io.Serializable;
@@ -174,6 +176,10 @@ public class Coord3 implements ICoordXZ, Serializable {
 	@Override
 	public String toString() {
 		return String.format("Coord3 x: %d, y: %d, z: %d", x,y,z); }
+	
+	public String debugCoordAndChunkCoord() {
+		return String.format("%s ChunkCoord: %s ", toString(), Chunk.ToChunkPosition(this).toString());
+	}
 
     @Override
     public boolean equals(Object other) {

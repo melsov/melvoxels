@@ -265,7 +265,7 @@ public class ChunkFinder {
         return ClosestChunk(cam, terrainMap, columnMap);
     }
 
-    public static final boolean UseTestColumns = false;
+    public static final boolean UseTestColumns = true;
     private static int TestColumnIndex = 0;
 
 //TODO: improve—"eh-hem"—the closest column finding shape: more of a square around player at first, less based on cam direction
@@ -308,7 +308,7 @@ public class ChunkFinder {
         Coord3 nextPos;
         for(Coord3 surroundingCoord : SurroundingCoordIncrements3D) {
             nextPos = surroundingCoord.add(camChunkCoord);
-            result = terrainMap.GetChunk(nextPos);
+            result = terrainMap.getChunk(nextPos);
             if (ChunkIsReady(columnMap, result, nextPos)){
                 return nextPos;
             }
@@ -337,7 +337,7 @@ public class ChunkFinder {
             nudge = nudge.multy(directionSignXZ);
             nextPos = nudge.add(camChunkCoord);
 
-            result = terrainMap.GetChunk(nextPos);
+            result = terrainMap.getChunk(nextPos);
             if (ChunkIsReady(columnMap, result, nextPos)){
                 return nextPos;
             }
@@ -357,7 +357,7 @@ public class ChunkFinder {
             nextPosV = camPos.add(escapeVector);
 
             chunkCoord = Chunk.ToChunkPosition(Coord3.FromVector3f(nextPosV));
-            searchChunk = terrainMap.GetChunk(chunkCoord);
+            searchChunk = terrainMap.getChunk(chunkCoord);
             if (ChunkIsReady(columnMap, searchChunk, chunkCoord)) return chunkCoord;
             camPos = nextPosV;
         }
@@ -437,7 +437,7 @@ public class ChunkFinder {
 
     private static boolean ChunkIsReady(ColumnMap columnMap, Chunk result, Coord3 foundCoord) {
         return columnMap.IsBuilt(foundCoord.x, foundCoord.z) && result != null &&
-            !result.getHasEverStartedBuilding() && !result.getIsAllAir();
+            !result.getHasEverStartedMeshing() && !result.getIsAllAir();
 }
 
     //DEBUG

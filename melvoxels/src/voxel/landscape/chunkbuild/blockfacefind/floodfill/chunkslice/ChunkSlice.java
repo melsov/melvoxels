@@ -31,12 +31,10 @@ public class ChunkSlice
         this.global = global;
         
     }
-//    public ChunkSlice(Coord3 _chunkCoord, int _direction) {
-//        chunkCoord = _chunkCoord; direction = _direction;
-//    }
-
+    
     public void addCoord(Coord3 global){
-    	Asserter.assertTrue(chunkCoord.equal(Chunk.ToChunkPosition(global)), "wrong chunk");
+    	Asserter.assertTrue(chunkCoord.equal(Chunk.ToChunkPosition(global)), "wrong chunk: slice chunk: " + chunkCoord.toString() + " global: " 
+			    + global.toString() + " global's chunk: " + Chunk.ToChunkPosition(global));
     	Asserter.assertTrue(planePositionGlobal == global.componentForDirection(direction), 
     			"wrong global position: global plane is at " + planePositionGlobal + " add coord: " 
 		    	+ global.toString() + "\nfor direction: " + Direction.ToString(direction) );

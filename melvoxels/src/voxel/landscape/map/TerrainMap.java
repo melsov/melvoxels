@@ -124,7 +124,7 @@ public class TerrainMap implements IBlockDataProvider
 	}
 
 	public int lookupBlock(Coord3 co) {
-		Chunk chunk = GetChunk(Chunk.ToChunkPosition(co));
+		Chunk chunk = getChunk(Chunk.ToChunkPosition(co));
 		if (chunk == null)
 			return NON_EXISTENT.ordinal();
 		return chunk.blockAt(Chunk.ToChunkLocalCoord(co));
@@ -135,7 +135,7 @@ public class TerrainMap implements IBlockDataProvider
 	}
 
 	public boolean blockAtWorldCoordIsTranslucent(int x, int y, int z) {
-		Chunk chunk = GetChunk(Chunk.ToChunkPosition(x, y, z));
+		Chunk chunk = getChunk(Chunk.ToChunkPosition(x, y, z));
 		if (chunk == null) return false;
 		return IsTranslucent(chunk.blockAt(Chunk.ToChunkLocalCoord(x, y, z)));
 	}
@@ -201,7 +201,7 @@ public class TerrainMap implements IBlockDataProvider
      * Clean up
      */
     public void writeChunkAndColumn(Coord3 chunkPos) {
-        Chunk ch = GetChunk(chunkPos);
+        Chunk ch = getChunk(chunkPos);
         if (ch != null) {
             ch.writeToFile();
             ch.hasStartedWriting.set(false);
@@ -219,7 +219,7 @@ public class TerrainMap implements IBlockDataProvider
     }
     
     public void removeChunk(Coord3 chunkPos) {
-    	Chunk ch = GetChunk(chunkPos);
+    	Chunk ch = getChunk(chunkPos);
         if (ch == null) {
             return;
         }
@@ -237,7 +237,7 @@ public class TerrainMap implements IBlockDataProvider
 
     public boolean columnHasHiddenChunk(ICoordXZ look) {
         for (Coord3 coord3 : new ColumnRange(look)) {
-            Chunk chunk = GetChunk(coord3);
+            Chunk chunk = getChunk(coord3);
             if (chunk != null && chunk.getChunkBrain().isHiding()) {
                 return true;
             }
@@ -246,7 +246,7 @@ public class TerrainMap implements IBlockDataProvider
     }
     public boolean columnEmpty(ICoordXZ look) {
         for (Coord3 coord3 : new ColumnRange(look)) {
-            Chunk chunk = GetChunk(coord3);
+            Chunk chunk = getChunk(coord3);
             if (chunk != null) {
                 return false;
             }
@@ -289,7 +289,7 @@ public class TerrainMap implements IBlockDataProvider
     }
     public Coord3 writeDirtyButNotWritingChunkInColumn(int x, int z) {
         for (Coord3 chunkPos = new Coord3(x, MAX_CHUNK_DIM_VERTICAL - 1, z); chunkPos.y >= MIN_CHUNK_DIM_VERTICAL; chunkPos.y--) {
-            Chunk chunk = GetChunk(chunkPos);
+            Chunk chunk = getChunk(chunkPos);
             if (chunk != null && chunk.isWriteDirty() && !chunk.hasStartedWriting.get()) return chunkPos;
         }
         return null;
@@ -699,7 +699,7 @@ public class TerrainMap implements IBlockDataProvider
 		Coord3 chunkPos = Chunk.ToChunkPosition(global);
 		Coord3 localPos = Chunk.ToChunkLocalCoord(global);
 
-        Chunk chunk = GetChunk(chunkPos);
+        Chunk chunk = getChunk(chunkPos);
         int wasType = chunk.blockAt(localPos);
         if (wasType == block) return;
 
@@ -750,7 +750,7 @@ public class TerrainMap implements IBlockDataProvider
 	}
 
 	private void SetDirty(Coord3 chunkPos) {
-		Chunk chunk = GetChunk(chunkPos);
+		Chunk chunk = getChunk(chunkPos);
 		if (chunk != null) {
             chunk.getChunkBrain().SetDirty();
         }
@@ -794,16 +794,17 @@ public class TerrainMap implements IBlockDataProvider
         // new chunk?
         if (result == null) {
             result = chunks.Get(chunkPos); // re-get the Chunk if it was null. now guaranteed to be there.
-            result.readFromFile(); // try to load the chunk from file
+            if (VoxelLandscape.READ_CHUNKS_FROM_FILE)
+	            result.readFromFile(); // try to load the chunk from file
         }
         return result;
 	}
 
-	public Chunk GetChunk(Coord3 chunkPos) {
+	public Chunk getChunk(Coord3 chunkPos) {
 		return chunks.Get(chunkPos);
 	}
     public Chunk GetChunk(int x, int y, int z) {
-        return GetChunk(new Coord3(x,y,z));
+        return getChunk(new Coord3(x,y,z));
     }
 
 	public SunLightMap GetSunLightmap() {
@@ -841,7 +842,7 @@ public class TerrainMap implements IBlockDataProvider
         sb.append("Block Info for: \n");
         sb.append(global.toString());
         sb.append("\n");
-        Chunk ch = GetChunk(chunkCo);
+        Chunk ch = getChunk(chunkCo);
         if (ch != null) {
             if (ch.chunkBlockFaceMap != null) {
 
@@ -858,6 +859,17 @@ public class TerrainMap implements IBlockDataProvider
         sb.append(local.toString());
         sb.append("\n");
         return sb.toString();
+    }
+    public String getChunkInfo(Coord3 chunkCoord) {
+    	Chunk chunk = getChunk(chunkCoord);
+    	if (chunk == null) return "null chunk at: " + chunkCoord.toString();
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("Chunk Info: ");
+    	sb.append(chunkCoord.toString());
+    	sb.append(String.format("\nWrite dirty: %b", chunk.isWriteDirty()));
+    	sb.append(String.format("\nHiding: %b", chunk.getChunkBrain().isHiding()));
+    	sb.append(String.format("\nHas Ever started meshing: %b", chunk.getHasEverStartedMeshing()));
+    	return sb.toString();
     }
 
     /*

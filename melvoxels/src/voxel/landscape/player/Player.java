@@ -106,11 +106,16 @@ public class Player
             else if (name.equals("DebugBlock") && !keyPressed) {
                 printBlockCursorInfo();
             }
+            else if (name.equals("DebugChunk") && !keyPressed) {
+                printChunkInfo();
+            }
     	}
     };
     private void printBlockCursorInfo() {
-        Coord3 global = Coord3.FromVector3f(blockCursor.getLocalTranslation());
-        B.bugln(terrainMap.getBlockInfoString(global));
+        B.bugln(terrainMap.getBlockInfoString(Coord3.FromVector3f(blockCursor.getLocalTranslation())));
+    }
+    private void printChunkInfo() {
+        B.bugln(terrainMap.getChunkInfo(Chunk.ToChunkPosition(Coord3.FromVector3f(blockCursor.getLocalTranslation()))));
     }
     private void moveNextChunk(int dir) {
         Coord3 unit = Direction.DirectionCoordForDirection(dir);

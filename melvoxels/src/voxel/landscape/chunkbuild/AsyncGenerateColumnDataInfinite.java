@@ -85,7 +85,7 @@ public class AsyncGenerateColumnDataInfinite implements Runnable // extends Resp
     private void DebugAssertChunkInMap(HashSet<Coord3> chunkCoords) {
     	Object[] chunkCos = chunkCoords.toArray();
         for (Object coord : chunkCos) {
-        	Asserter.assertTrue(terrainMap.GetChunk((Coord3) coord) != null , "not in map: " + coord.toString());
+        	Asserter.assertTrue(terrainMap.getChunk((Coord3) coord) != null , "not in map: " + coord.toString());
         }
     }
 

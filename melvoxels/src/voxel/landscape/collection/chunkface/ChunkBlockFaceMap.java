@@ -53,7 +53,7 @@ public class ChunkBlockFaceMap implements Serializable {
             if (Chunk.ChunkLocalBox.contains(localCoord.add(Direction.DirectionCoords[dir]))) {
                 chunkBlockFaceMap = this;
             } else {
-                Chunk neighbor = map.GetChunk(Chunk.ToChunkPosition(globalNudge));
+                Chunk neighbor = map.getChunk(Chunk.ToChunkPosition(globalNudge));
                 //#DEBUG
                 if (neighbor == null) {
 	                DebugGeometry.AddRemoveChunk(Chunk.ToChunkPosition(globalNudge));
@@ -88,7 +88,7 @@ public class ChunkBlockFaceMap implements Serializable {
             if (Chunk.ChunkLocalBox.contains(localCoord.add(Direction.DirectionCoords[dir]))) {
                 chunkBlockFaceMap = this;
             } else {
-                Chunk neighbor = map.GetChunk(Chunk.ToChunkPosition(globalNudge));
+                Chunk neighbor = map.getChunk(Chunk.ToChunkPosition(globalNudge));
                 if (neighbor != null) {
                     chunkBlockFaceMap = neighbor.chunkBlockFaceMap;
                 }

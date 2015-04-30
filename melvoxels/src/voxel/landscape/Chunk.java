@@ -66,9 +66,9 @@ public class Chunk
     /*
      * Flags
      */
-    private volatile boolean hasEverStartedBuilding = false;
-    public void setHasEverStartedBuildingToTrue() { hasEverStartedBuilding = true; }
-    public boolean getHasEverStartedBuilding() { return hasEverStartedBuilding; }
+    private volatile boolean hasEverBuiltMesh = false;
+    public void setHasEverStartedMeshingTrue() { hasEverBuiltMesh = true; }
+    public boolean getHasEverStartedMeshing() { return hasEverBuiltMesh; }
 
     public volatile AtomicBoolean hasStartedWriting = new AtomicBoolean(false);
     public AtomicBoolean hasAddedStructures = new AtomicBoolean(false);

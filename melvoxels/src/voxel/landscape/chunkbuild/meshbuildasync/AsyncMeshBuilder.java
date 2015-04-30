@@ -38,7 +38,7 @@ public class AsyncMeshBuilder implements Runnable
                     B.bugln("time to quit" + Thread.currentThread().getName());
                     return;
                 }
-                chunk = terrainMap.GetChunk(chunkMeshBuildingSet.chunkPosition);
+                chunk = terrainMap.getChunk(chunkMeshBuildingSet.chunkPosition);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

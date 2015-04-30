@@ -61,7 +61,7 @@ public class TerrainDataProvider {
     }
 
     private static boolean USE_TEST_NOISE = false;
-    private static boolean SOLID_BLOCKTYPE_PER_CHUNK = false;
+    private static boolean BLOCKTYPE_PER_CHUNK = false;
 
     public int getBlockDataAtPosition(int xin, int yin, int zin) {
         if(mode == Mode.ImageMode) {
@@ -80,7 +80,7 @@ public class TerrainDataProvider {
 //        if (fakeCave(xin, yin, zin)) return BlockType.LANTERN.ordinal();
 
             int b = borderBoxMaker.shapeMix(xin, yin, zin);
-            if (SOLID_BLOCKTYPE_PER_CHUNK) {
+            if (BLOCKTYPE_PER_CHUNK) {
                 return b==BlockType.AIR.ordinal() ? BlockType.AIR.ordinal() : blockTypePerChunk(xin, yin, zin);
             }
             return b;
@@ -92,7 +92,7 @@ public class TerrainDataProvider {
                 xin / WORLD_TO_VERTICAL_NOISE_SCALE,
                 yin / WORLD_TO_VERTICAL_NOISE_SCALE,
                 zin / WORLD_TO_VERTICAL_NOISE_SCALE);
-        if (SOLID_BLOCKTYPE_PER_CHUNK) {
+        if (BLOCKTYPE_PER_CHUNK) {
             return r < 1.001 ? BlockType.AIR.ordinal() : blockTypePerChunk(xin, yin, zin);
         }
         return r < 0.001 ? BlockType.AIR.ordinal() : (int) r;

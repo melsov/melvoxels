@@ -79,10 +79,9 @@ public class FloodFill4D implements Runnable
     public static final boolean DONT_ACTUALLY_FLOOD_FILL = false;
     public void startFlood(Coord3 chunkCoord) {
         // * SHORT CIRCUIT THE WHOLE FLOOD FILL (DON'T FLOOD FILL--for testing) *
-        if (DONT_ACTUALLY_FLOOD_FILL || WorldGenerator.TEST_DONT_BUILD)
-        { try { floodFilledChunkCoords.put(chunkCoord); } catch (InterruptedException e) { e.printStackTrace(); } return; }
+        if (DONT_ACTUALLY_FLOOD_FILL || WorldGenerator.TEST_DONT_BUILD) { try { floodFilledChunkCoords.put(chunkCoord); } catch (InterruptedException e) { e.printStackTrace(); } return; }
 
-        Chunk chunk = map.GetChunk(chunkCoord);
+        Chunk chunk = map.getChunk(chunkCoord);
         Asserter.assertChunkNotNull(chunk, chunkCoord);
         boolean originalChunkCoordWasNeverAdded = chunk.chunkFloodFillSeedSet.size() == 0;
 
@@ -90,6 +89,10 @@ public class FloodFill4D implements Runnable
             if (shouldStop.get()) return;
             flood(chunk.chunkFloodFillSeedSet.removeNext());
         }
+        
+        //TODO: reexamine inBounds/outOfBounds Bags. 
+        // maybe, just empty the ooB 'more thoroughly?' 
+        // like go through all surface
 
         /*
          * CHECK THE COLUMN OF THIS CHUNK CO
@@ -131,7 +134,7 @@ public class FloodFill4D implements Runnable
         ChunkSlice[] seedChunkShell = new ChunkSlice[6];
         initializeChunkShell(seedChunkShell, initialSeed);
 
-        floodFill.flood(seedChunkShell, initialSeed);
+        floodFill.floodChunk(seedChunkShell, initialSeed);
         putDirtyChunks();
 
         /* add chunk slices to one or the other bounds bag from chunkShell after flood filling the initial seed */
@@ -161,9 +164,7 @@ public class FloodFill4D implements Runnable
                 // find a slice whose column is SURFACE_BUILT
                 List<ChunkSlice> iBBSlices = inBoundsBag.getSlices();
                 for(int i = 0; i < iBBSlices.size(); ++i) {
-                    ChunkSlice slice = iBBSlices.remove(i); // iBBSlices.get(i);
-                    if (slice.size() == 0) {  Asserter.assertFalseAndDie("happens?"); continue; } //TEST? NOT SURE?
-
+                    ChunkSlice slice = iBBSlices.remove(i); 
                     if (columnMap.HasBuiltSurface(slice.getChunkCoord().x, slice.getChunkCoord().z)) {
                         chunkSlice = slice;
                         break;
@@ -179,7 +180,7 @@ public class FloodFill4D implements Runnable
                 ChunkSlice[] chunkShell = new ChunkSlice[6];
                 initializeChunkShell(chunkShell, seed);
 
-                floodFill.flood(chunkShell, seed);
+                floodFill.floodChunk(chunkShell, seed);
                 for (int i = 0; i <= Direction.ZPOS; ++i) {
                     if (chunkShell[i].size() == 0) { continue; }
                     if (!inBoundsBag.add(chunkShell[i])) {
