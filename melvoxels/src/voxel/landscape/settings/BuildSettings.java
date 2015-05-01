@@ -9,7 +9,7 @@ import voxel.landscape.coord.*;
  */
 public class BuildSettings {
 
-    public static int ADD_COLUMN_RADIUS = 3;
+    public static int ADD_COLUMN_RADIUS = 5;
     public static int PREPARE_COLUMN_RADIUS = ADD_COLUMN_RADIUS + 1;
     public static int STORE_COLUMN_RADIUS = PREPARE_COLUMN_RADIUS + 2;
 

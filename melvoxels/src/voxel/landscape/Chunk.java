@@ -81,7 +81,7 @@ public class Chunk
         return blocks.writeDirty.get() || chunkBlockFaceMap.writeDirty.get() || chunkFloodFillSeedSet.writeDirty.get();
     }
 
-    public final Lock lock = new ReentrantLock(true);
+    private final Lock lock = new ReentrantLock(true);
 
 //    public static boolean USE_TEST_GEOMETRY = false;
 

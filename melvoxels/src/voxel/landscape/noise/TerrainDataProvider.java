@@ -61,7 +61,7 @@ public class TerrainDataProvider {
     }
 
     private static boolean USE_TEST_NOISE = false;
-    private static boolean BLOCKTYPE_PER_CHUNK = false;
+    private static boolean BLOCKTYPE_PER_CHUNK = true;
 
     public int getBlockDataAtPosition(int xin, int yin, int zin) {
         if(mode == Mode.ImageMode) {

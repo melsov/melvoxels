@@ -58,7 +58,6 @@ public class FloodFill
             ChunkSlice nextSlice = slices.remove(0);
             ChunkSlice yPosChunkSliceNext = new ChunkSlice(Direction.YPOS, nextSlice.global.add(Coord3.ypos));
             ChunkSlice yNegChunkSliceNext = new ChunkSlice(Direction.YNEG, nextSlice.global.add(Coord3.yneg));
-            //TODO: bug fix: logic fix: chunkSliceShell is the wrong chunk slice shell if we move to another chunk.
             while(nextSlice.size() > 0) {
             	Coord3 nextSeed = nextSlice.removeNext();
             	Asserter.assertTrue(Chunk.ToChunkPosition(nextSeed).equal(Chunk.ToChunkPosition(seedGlobal)), "no? next seed: " + nextSeed.toString() + " orig seed global: " + seedGlobal.toString() );
@@ -72,7 +71,6 @@ public class FloodFill
             }
         }
     }
-
 
     private static void addSeed(ArrayList<Coord3> seeds, Coord3 seed) {
         seeds.add(seed);
@@ -136,7 +134,7 @@ public class FloodFill
         int xAreaStart = chunkBox.start.x, yAreaStart = chunkBox.start.y, zAreaStart = chunkBox.start.z;
         int xAreaEnd = chunkBox.extent().x, yAreaEnd = chunkBox.extent().y, zAreaEnd = chunkBox.extent().z;
 
-        while(seeds.size() > 0) {
+        exhaustSeeds : while(seeds.size() > 0) {
             Coord3 seed = seeds.remove(0);
             int blockTypeTest = map.lookupOrCreateBlock(seed);
             if (BlockType.IsFloodFilledAir(blockTypeTest) || map.isAboveSurface(seed) || BlockType.IsSolid(blockTypeTest)) {
@@ -152,7 +150,7 @@ public class FloodFill
             Coord3 lessZNEGCoord = null;
             Coord3 previousZNEGForLight = null;
             int blockType = BlockType.NON_EXISTENT.ordinal();
-            boolean TestOneIteration = false;
+            boolean oneIteration = false;
             while (true) {
                 if (shouldStop.get()) { return; }
                 /*
@@ -168,14 +166,20 @@ public class FloodFill
                 blockType = map.lookupOrCreateBlock(lessZNEGCoord);
                 addFaceForType(seedChunk, chunkBox, lessZNEGCoord, Direction.ZPOS, blockType);
                 if (BlockType.IsSolid(blockType) || map.isAboveSurface(lessZNEGCoord) || BlockType.IsFloodFilledAir(blockType)) {
-                    z1++;
-                    if (!TestOneIteration ) {
-                    	B.bugln("we didn't iterate yet");
-                    	B.bugln(String.format("Is solid %d. above surf: %d. is FFAir: %d", BlockType.IsSolid(blockType) , map.isAboveSurface(lessZNEGCoord) , BlockType.IsFloodFilledAir(blockType) ));
-                    }
-                    Asserter.assertTrue(chunkBox.contains(new Coord3(seed.x, seed.y, z1)), "Chunk box: " + chunkBox.start.debugCoordAndChunkCoord() + 
-                    		" doesn't contain coord: " + new Coord3(seed.x, seed.y, z1).debugCoordAndChunkCoord());
-                    break;
+                	if (oneIteration) {
+	                    z1++;
+	                    break;
+                	} else {
+                		continue exhaustSeeds;
+                	}
+//                    if (!chunkBox.contains(new Coord3(seed.x, seed.y, z1))) {
+//                    	B.bugln("we didn't iterate yet");
+//                    	B.bugln(String.format("Is solid %b. above surf: %b. is FFAir: %b", BlockType.IsSolid(blockType) , map.isAboveSurface(lessZNEGCoord) , BlockType.IsFloodFilledAir(blockType) ));
+//                    	B.bugln(String.format( "Orig z: at area start: %b at area end: %b, current z1: %d area start: %d end: %d", z1 - 1 == zAreaStart, z1 - 1 == zAreaEnd - 1, z1, zAreaStart, zAreaEnd));
+//                    }
+//                    Asserter.assertTrue(chunkBox.contains(new Coord3(seed.x, seed.y, z1)), "Chunk box: " + chunkBox.start.debugCoordAndChunkCoord() + 
+//                    		" doesn't contain coord: " + new Coord3(seed.x, seed.y, z1).debugCoordAndChunkCoord());
+                    
                 }
                 else if (z1 == zAreaStart) {
                     Coord3 zNegNeighbor = new Coord3(seed.x, seed.y, z1 - 1);
@@ -194,7 +198,7 @@ public class FloodFill
                     offerLightBothWays(previousZNEGForLight, lessZNEGCoord, previousType, blockType);
                 }
                 z1--;
-                TestOneIteration = true;
+                oneIteration = true;
             }
             spanXNEG = spanXPOS = false;
             /************
@@ -311,8 +315,6 @@ public class FloodFill
                     if (seed.y == yAreaEnd - 1) {
                         chunkSliceFromShell(chunkSliceShell, Direction.YPOS).addCoord(yPosNeighbor);
                     } else {
-                    	//WHY
-                    	B.bugln(String.format("chunk box chunk co: %s, zAreaEnd: %d", Chunk.ToChunkPosition(chunkBox.start).toString(), zAreaEnd));
                     	Asserter.assertTrue(Chunk.ToChunkPosition(subject).equal(yPosChunkSlice.getChunkCoord()), 
                     			String.format("wha? seed chunk is: %s. Y POS chunkCoord: %s\n zAreaEnd: %d", subject.debugCoordAndChunkCoord(), yPosChunkSlice.getChunkCoord().toString() , zAreaEnd ));
                         yPosChunkSlice.addCoord(yPosNeighbor);

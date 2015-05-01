@@ -125,7 +125,7 @@ public class DebugGeometry
     }
     public static void AddChunk(Coord3 position, ColorRGBA color) {
     	if (!addChunks.containsKey(position) && addChunkNode.getChild("box" + Chunk.ToWorldPosition(position).toString()) == null) {
-    		Geometry g = makeChunkBox(position, color, false);
+    		Geometry g = makeChunkBox(position, color, true);
 	        addChunks.put(position, g);
     	}
     }

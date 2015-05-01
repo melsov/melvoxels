@@ -114,7 +114,6 @@ public class WorldGenerator {
 	}
 
 	private void initColumnDataThreadExecutorService() {
-
 		colDataPool = Executors.newFixedThreadPool(COLUMN_DATA_BUILDER_THREAD_COUNT);
 		for (int i = 0; i < COLUMN_DATA_BUILDER_THREAD_COUNT; ++i) {
 			AsyncGenerateColumnDataInfinite infinColDataThread = new AsyncGenerateColumnDataInfinite(map, columnMap,
@@ -234,6 +233,7 @@ public class WorldGenerator {
 			attachMeshToScene(chunk); // NOTE: attaching empty mesh, no mesh
 										// geom yet
 		} else {
+			DebugGeometry.AddChunk(chunk.position, ColorRGBA.Brown);
 			chunk.getChunkBrain().setMeshEmpty();
 		}
 	}
@@ -251,11 +251,12 @@ public class WorldGenerator {
 	private void renderChunks() {
 		for (int count = 0; count < 5; ++count) {
 			ChunkMeshBuildingSet chunkMeshBuildingSet = completedChunkMeshSets.poll();
-			if (chunkMeshBuildingSet == null)
+			if (chunkMeshBuildingSet == null) {
 				continue;
-
+			}
 			// write to file and don't mesh chunk?
 			if (!BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), chunkMeshBuildingSet.chunkPosition)) {
+				DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Red);
 				slateForUnload(map.getChunk(chunkMeshBuildingSet.chunkPosition));
 				continue;
 			}
@@ -265,7 +266,7 @@ public class WorldGenerator {
 				DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Magenta);
 				continue;
 			}
-			Asserter.assertTrue(chunk != null, "null chunk in check async...");
+			Asserter.assertTrue(chunk != null, "null chunk in renderChunks...");
 			chunk.getChunkBrain().applyMeshBuildingSet(chunkMeshBuildingSet);
 		}
 	}

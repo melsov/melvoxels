@@ -70,14 +70,14 @@ public class ColumnMap {
     public boolean HasNotBeenStarted(int x, int z) {
     	return HasNotBeenStarted(new Coord2 (x,z));
     }
-    public boolean HasNotBeenStarted(Coord2 column) {	
-    	if (UnsafeGet(column) == null) return false;
+    public synchronized boolean HasNotBeenStarted(Coord2 column) {	
+    	if (UnsafeGet(column) == null) return true;
         return GetColumnChunk(column).buildStatus.get() == BuildStatus.HAS_NOT_BEEN_TOUCHED.ordinal();
     }
-    public boolean IsBuiltOrIsBuilding(int x, int z) {
+    public synchronized boolean IsBuiltOrIsBuilding(int x, int z) {
         return GetColumnChunk(x, z).buildStatus.get() > BuildStatus.HAS_NOT_BEEN_TOUCHED.ordinal();
     }
-	public boolean HasBuiltSurface(int x, int z) {
+	public synchronized boolean HasBuiltSurface(int x, int z) {
 		return GetColumnChunk(x, z).buildStatus.get() >= BuildStatus.BUILT_SURFACE_DATA.ordinal();
 	}
     public boolean NotYetBuilt(int x, int z) {

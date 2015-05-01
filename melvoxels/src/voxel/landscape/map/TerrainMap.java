@@ -24,6 +24,8 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static voxel.landscape.BlockType.*;
 
@@ -51,6 +53,8 @@ public class TerrainMap implements IBlockDataProvider
 
     public final BlockingQueue<Coord3> chunkCoordsToBeFlooded = new ArrayBlockingQueue<Coord3>(128);
     public final BlockingQueue<Coord3> chunkCoordsToBePriorityFlooded = new ArrayBlockingQueue<Coord3>(128);
+    
+    private final Lock lock = new ReentrantLock(true);
 
 	public TerrainMap(VoxelLandscape _app) {
         app = _app;
@@ -780,6 +784,7 @@ public class TerrainMap implements IBlockDataProvider
 		}
 		return 0;
 	}
+	
 
 	/*
 	 * Chunk info
@@ -791,11 +796,15 @@ public class TerrainMap implements IBlockDataProvider
         if (!ChunkCoordWithinWorldBounds(chunkPos)) return null;
         // Sets chunk at key if not there before. Returns previous value! (null if nothing was there)
         Chunk result = chunks.putIfKeyIsAbsent(chunkPos, new Chunk(chunkPos, this));
-        // new chunk?
-        if (result == null) {
-            result = chunks.Get(chunkPos); // re-get the Chunk if it was null. now guaranteed to be there.
-            if (VoxelLandscape.READ_CHUNKS_FROM_FILE)
-	            result.readFromFile(); // try to load the chunk from file
+        lock.lock();
+        try {
+        	// new chunk?
+	        if (result == null) {
+	            result = chunks.Get(chunkPos); // re-get the Chunk if it was null. now guaranteed to be there.
+	            if (VoxelLandscape.READ_CHUNKS_FROM_FILE) result.readFromFile(); // try to load the chunk from file
+	        }
+        } finally {
+        	lock.unlock();
         }
         return result;
 	}
