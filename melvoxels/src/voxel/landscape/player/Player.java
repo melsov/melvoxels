@@ -449,10 +449,10 @@ public class Player
         playerNode.attachChild(headNode);
 
         //DEBUG: SHOW GEOMETRY
-        Geometry playerGeom = makePlayerGeometry();
-        playerNode.attachChild(playerGeom);
-        playerGeom.setLocalTranslation(-halfWidthXZ, 0f, -halfWidthXZ);
-        playerNode.attachChild(makeSmallBox(ColorRGBA.Orange));
+//        Geometry playerGeom = makePlayerGeometry();
+//        playerNode.attachChild(playerGeom);
+//        playerGeom.setLocalTranslation(-halfWidthXZ, 0f, -halfWidthXZ);
+//        playerNode.attachChild(makeSmallBox(ColorRGBA.Orange));
 
         CameraNode camNode;
         if (_cam != null) {
@@ -466,7 +466,7 @@ public class Player
 
             //TEST
             headNode.setLocalTranslation(0f, height, 0f);
-            headNode.attachChild(makeSmallBox(ColorRGBA.Magenta));
+//            headNode.attachChild(makeSmallBox(ColorRGBA.Magenta));
 
         } else {
             _terrainNode.addControl(playerControl);

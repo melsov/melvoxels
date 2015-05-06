@@ -44,7 +44,6 @@ public class FloodFill
     }
 
     public void floodChunk(ChunkSlice[] chunkSliceShell, Coord3 seedGlobal) {
-//        dirtyChunks.clear(); // dirty chunks keeps track of edited chunks
         dirtyChunks.add(Chunk.ToChunkPosition(seedGlobal));
 
         ChunkSlice yPosChunkSlice = new ChunkSlice(Direction.YPOS, seedGlobal.add(Coord3.ypos));

@@ -53,7 +53,7 @@ import java.awt.image.BufferedImage;
 public class VoxelLandscape extends SimpleApplication
 {
     public static final WorldSettings WorldSettings = new WorldSettings(-21234);
-    public static boolean FULL_SCREEN = false;
+    public static boolean FULL_SCREEN = true;
 
 	public static boolean USE_TEXTURE_MAP = false, DEBUG_INFO_ON = false, ADD_CHUNKS_DYNAMICALLY = true, COMPILE_CHUNK_DATA_ASYNC = false,
             CULLING_ON = false, BUILD_INITIAL_CHUNKS = true, DONT_BUILD_CHUNK_MESHES = true, SHOW_COLUMN_DEBUG_QUADS = false, FORCE_WIRE_FRAME = false,
@@ -179,8 +179,7 @@ public class VoxelLandscape extends SimpleApplication
 	/*******************************
 	 * Program starts here... ******
      *******************************/
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         VoxelLandscape app = new VoxelLandscape();
         ScreenSettings(app, FULL_SCREEN); //<--- call new method here
         app.start(); // start the game
@@ -188,13 +187,27 @@ public class VoxelLandscape extends SimpleApplication
     private static void ScreenSettings(VoxelLandscape app, boolean fullScreen) {
         GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
         DisplayMode[] modes = device.getDisplayModes();
+        int max = 0;
         int SCREEN_MODE=0; // note: there are usually several, let's pick the first
+        //find max dims
+        for (int i=0;i<modes.length;i++){
+        	DisplayMode mode = modes[i];
+        	if (mode.getWidth() * mode.getHeight() > max) {
+        		max = mode.getWidth() * mode.getHeight();
+        		SCREEN_MODE = i; 
+        	}
+        }
         AppSettings settings = new AppSettings(true);
-        float scale_screen = fullScreen ? 1f : .6f;
+        float scale_screen = fullScreen ? 1f : .5f;
         screenDims = new Coord2((int)(modes[SCREEN_MODE].getWidth() * scale_screen ),(int)(modes[SCREEN_MODE].getHeight() * scale_screen ));
         settings.setResolution(screenDims.x, screenDims.y);
         settings.setFrequency(modes[SCREEN_MODE].getRefreshRate());
         settings.setBitsPerPixel(modes[SCREEN_MODE].getBitDepth());
+        settings.setFrameRate(60);
+        settings.setVSync(true);
+        settings.setDepthBits(16);
+        settings.setSamples(0);
+        settings.setRenderer(AppSettings.LWJGL_OPENGL2);
         if (fullScreen) {
             settings.setFullscreen(device.isFullScreenSupported());
         }
@@ -438,13 +451,12 @@ public class VoxelLandscape extends SimpleApplication
         CameraNode camNode = new CameraNode("cam2_node", cam2);
         player.getPlayerNode().attachChild(camNode);
 
-        setInfoCamPosition();
+        setInfoCamPosition(); //offset from player
 
         ViewPort viewPort2 = renderManager.createMainView("Info_view_port", cam2);
         viewPort2.setClearFlags(true, true, true);
         viewPort2.setBackgroundColor(ColorRGBA.Black);
         viewPort2.attachScene(rootNode);
-
     }
     private static int INFO_AXIS = Axis.Y;
     public void toggleInfoViewAxis() {
