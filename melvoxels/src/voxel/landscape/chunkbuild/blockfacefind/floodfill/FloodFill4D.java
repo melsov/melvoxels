@@ -99,23 +99,39 @@ public class FloodFill4D implements Runnable
          * SEE IF THERE ARE ANY SLICES IN THE OUTOFBOUNDS-BAG IN THIS COLUMN
          * IF SO, REMOVE THEM AND FLOOD FILL WITH THEM
          */
-        List<ChunkSlice> outOfBoundsBagSlices = outOfBoundsBag.getSlices();
-        for(int i=0; i<outOfBoundsBagSlices.size(); ++i) {
-            if (shouldStop.get()) return;
-            ChunkSlice obbSlice = outOfBoundsBagSlices.get(i);
-            if (obbSlice.getChunkCoord().x == chunkCoord.x && obbSlice.getChunkCoord().z == chunkCoord.z) {
-                while(obbSlice.size() > 0) {
-                    flood(obbSlice.removeNext());
-                }
-                outOfBoundsBagSlices.remove(i--);
-            }
-        }
+//        List<ChunkSlice> outOfBoundsBagSlices = outOfBoundsBag.getSlices();
+//        for(int i=0; i<outOfBoundsBagSlices.size(); ++i) {
+//            if (shouldStop.get()) return;
+//            ChunkSlice obbSlice = outOfBoundsBagSlices.get(i);
+//            if (obbSlice.getChunkCoord().x == chunkCoord.x && obbSlice.getChunkCoord().z == chunkCoord.z) {
+//                while(obbSlice.size() > 0) {
+//                    flood(obbSlice.removeNext());
+//                }
+//                outOfBoundsBagSlices.remove(i--);
+//            }
+//        }
+        updateOutOfBoundsBag();
         if (shouldStop.get()) return;
         // if there were no seeds (no overhangs) we still need to pass this chunk coord along
         if (originalChunkCoordWasNeverAdded) {
             try { floodFilledChunkCoords.put(chunkCoord); } catch (InterruptedException e) { e.printStackTrace(); }
         }
     }
+    
+    private void updateOutOfBoundsBag() {
+    	List<ChunkSlice> outOfBoundsBagSlices = outOfBoundsBag.getSlices();
+        for(int i=0; i<outOfBoundsBagSlices.size(); ++i) {
+            if (shouldStop.get()) return;
+            ChunkSlice obbSlice = outOfBoundsBagSlices.get(i);
+            if (map.getApp().getColumnMap().HasBuiltSurface(obbSlice.getChunkCoord().x, obbSlice.getChunkCoord().z )) {
+                while(obbSlice.size() > 0) {
+                    flood(obbSlice.removeNext());
+                }
+                outOfBoundsBagSlices.remove(i--);
+            }
+        }
+    }
+    
     private synchronized void putDirtyChunks() { //stab in the dark : 'synchronized'
         if (floodFill.dirtyChunks.size() == 0) return;
 		Coord3[] dirtyChunks = floodFill.dirtyChunks.toArray(new Coord3[floodFill.dirtyChunks.size()]);

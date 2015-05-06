@@ -59,6 +59,7 @@ public class AsyncGenerateColumnDataInfinite implements Runnable // extends Resp
             if (columnMap.SetIsBuildingOrReturnFalseIfStartedAlready(x,z)) {
                 touchedChunkCoords.clear();
                 //TODO: try Debug setting block type based on which process is finding (solid) blocks: crawl surface: GRASS, floodFill: DIRT
+                //TODO: CONSIDER: flood-fill a column and THEN add structures?
                 terrainMap.generateSurface(x, z, dataProvider, touchedChunkCoords);
                 structureBuilder.addStructures(colCoord, terrainMap, dataProvider, touchedChunkCoords);
                 columnMap.SetBuiltSurface(x, z);

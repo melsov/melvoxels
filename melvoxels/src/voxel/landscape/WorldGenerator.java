@@ -255,15 +255,21 @@ public class WorldGenerator {
 				continue;
 			}
 			// write to file and don't mesh chunk?
-			if (!BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), chunkMeshBuildingSet.chunkPosition)) {
-				DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Red);
-				slateForUnload(map.getChunk(chunkMeshBuildingSet.chunkPosition));
-				continue;
-			}
 			Chunk chunk = map.getChunk(chunkMeshBuildingSet.chunkPosition);
 			if (chunk == null) {
 				B.bugln("null chunk: render chunks");
 				DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Magenta);
+				continue;
+			}
+			if (!BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), chunkMeshBuildingSet.chunkPosition)) {
+				if (chunk.hasNoBlocks() ) {
+					DebugGeometry.AddChunk(chunk.position, ColorRGBA.Gray);
+				} else if (!chunk.getChunkBrain().hasMeshData()) {
+					DebugGeometry.AddChunk(chunk.position, ColorRGBA.Brown);
+				} else {
+					DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Red);
+				}
+				slateForUnload(map.getChunk(chunkMeshBuildingSet.chunkPosition));
 				continue;
 			}
 			Asserter.assertTrue(chunk != null, "null chunk in renderChunks...");

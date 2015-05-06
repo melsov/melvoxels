@@ -24,7 +24,7 @@ public class ChunkFloodFillSeedSet implements Serializable {
         chunkCoord = _chunkCoord;
     }
 
-    public void addCoord(Coord3 global){
+    public synchronized void addCoord(Coord3 global){
         Coord3 local = Chunk.ToChunkLocalCoord(global);
         ChunkFloodFillSeedBlob3D adjacentFloodFillSeed = null;
         for (int i = 0; i < seeds.size(); ++i) {
@@ -45,7 +45,7 @@ public class ChunkFloodFillSeedSet implements Serializable {
         writeDirty.set(true);
     }
 
-    public Coord3 removeNext() {
+    public synchronized Coord3 removeNext() {
         if (seeds.size() == 0) return null;
         writeDirty.set(true);
         return Chunk.ToWorldPosition(chunkCoord, seeds.remove(0).getSeed());
@@ -74,9 +74,9 @@ public class ChunkFloodFillSeedSet implements Serializable {
         }
     }
 
-    public void writeToFile(Coord3 position) {
+    public synchronized void writeToFile(Coord3 position) {
     	if (!writeDirty.get()) return;
-        try {
+        try { // TODO: protect against concurrent modification exception here. Just synchronize?
             FileUtil.SerializeChunkObject(seeds, position, FileUtil.ChunkFloodFillSeedSetExtension);
         } catch (IOException e) {
             e.printStackTrace();

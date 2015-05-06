@@ -211,9 +211,9 @@ public class BorderBoxMaker {
     }
     public BorderBox getFakeTallCaveBorderBox() {
         if (fakeTallCaveBorderBox == null) {
-            fakeTallCaveBorderBox = new BorderBox(new Box(new Coord3(18, 6, 18), new Coord3(9,12,9)));
+            fakeTallCaveBorderBox = new BorderBox(new Box(new Coord3(18, 6, 4), new Coord3(9,12,78)));
             fakeTallCaveBorderBox.openFaces[Direction.XNEG] = false;
-            fakeTallCaveBorderBox.openFaces[Direction.ZNEG] = false;
+            fakeTallCaveBorderBox.openFaces[Direction.ZNEG] = true;
             fakeTallCaveBorderBox.openFaces[Direction.ZPOS] = false;
         }
         return fakeTallCaveBorderBox;
