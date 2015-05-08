@@ -1,6 +1,7 @@
 package voxel.landscape.collection.chunkarray;
 
 import voxel.landscape.Chunk;
+import voxel.landscape.player.B;
 import voxel.landscape.util.Asserter;
 
 import java.io.IOException;
@@ -15,7 +16,12 @@ public class ChunkUByte2D extends ChunkPrimitiveType2D
 
     @Override
     public void Set(int val, int x, int z) {
-        chunk[z * Chunk.CHUNKDIMS.x + x] = (byte)val;
+    	try {
+		    chunk[z * Chunk.CHUNKDIMS.x + x] = (byte)val;
+    	} catch(ArrayIndexOutOfBoundsException aie ) {
+    		B.bugln("chunk length: " + chunk.length + " index: " + (z * Chunk.CHUNKDIMS.x + x) );
+    		aie.printStackTrace();
+    	}
         writeDirty.set(true);
     }
     @Override

@@ -50,7 +50,7 @@ public class ChunkFloodFillSeedSet implements Serializable {
         writeDirty.set(true);
         return Chunk.ToWorldPosition(chunkCoord, seeds.remove(0).getSeed());
     }
-    public int size() {
+    public synchronized int size() {
         return seeds.size();
     }
     @Override

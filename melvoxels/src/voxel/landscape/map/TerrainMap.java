@@ -560,21 +560,6 @@ public class TerrainMap implements IBlockDataProvider
         // TODO: add chunk coord to needs flood fill--here?
     }
 
-    /*
-     * Sunlight/Surface
-     */
-    public boolean isAboveSurface(Coord3 global) { return getSurfaceHeight(global) < global.y;  }
-    public int getSurfaceHeight(Coord3 global) { return getSurfaceHeight(global.x,global.z); }
-    public int getSurfaceHeight(int x, int z) { return sunLightmap.GetSunHeight(x,z) - 1; }
-    public void setSurfaceHeight(Coord3 global) {
-        sunLightmap.SetSunHeight(global.y + 1, global.x, global.z);
-    }
-    public void updateSurface(Coord3 global) {
-        if ((global.y > getSurfaceHeight(global))) {
-            setSurfaceHeight(global);
-        }
-    }
-
     private void climbUpCliff(Coord3 global, int height, int direction, TerrainDataProvider _terrainDataProvider, HashSet<Coord3> touchedChunkCoords) {
         Coord3 neighbor = global.add(Direction.DirectionCoords[direction]);
         int neighborHeight = getSurfaceHeight(neighbor);
@@ -605,6 +590,22 @@ public class TerrainMap implements IBlockDataProvider
 
         }
     }
+
+    /*
+     * Sunlight/Surface
+     */
+    public boolean isAboveSurface(Coord3 global) { return getSurfaceHeight(global) < global.y;  }
+    public int getSurfaceHeight(Coord3 global) { return getSurfaceHeight(global.x,global.z); }
+    public int getSurfaceHeight(int x, int z) { return sunLightmap.GetSunHeight(x,z) - 1; }
+    public void setSurfaceHeight(Coord3 global) {
+        sunLightmap.SetSunHeight(global.y + 1, global.x, global.z);
+    }
+    public void updateSurface(Coord3 global) {
+        if ((global.y > getSurfaceHeight(global))) {
+            setSurfaceHeight(global);
+        }
+    }
+
     public void updateChunksToBeFlooded(HashSet<Coord3> chunkCoords) {
         for (Coord3 co : chunkCoords) {
             try {
@@ -697,7 +698,7 @@ public class TerrainMap implements IBlockDataProvider
 	 * Update the map and check if anything else needs updating
 	 * Credit: Mr. Wishmaster methods (YouTube)
 	 */
-	public void SetBlockAndRecompute(int block, Coord3 global) {
+	public void setBlockAndRecompute(int block, Coord3 global) {
         if (!isGlobalCoordWithinWorldBounds(global)) return;
 
 		Coord3 chunkPos = Chunk.ToChunkPosition(global);
@@ -721,6 +722,12 @@ public class TerrainMap implements IBlockDataProvider
         }
         //need to flood fill?
         if (!IsTranslucent(wasType) && AIR.ordinal() == block) {
+        	//TODO: split cases: the air block may be a 'man-hole cover' on the surface
+        	// if so: must crawl down the hole ourselves: i.e. edit column with 'climb up cliff'
+        	// if global is above 'on/above' surface... climb up cliff in this column (really going down)
+        	// if below, then use the existing three lines below
+        	// OR: do we really want to: FIND SURFACE AT, in the above surface, man-hole case: BOTH really
+        	
             chunk.setBlockAt(PLACEHOLDER_AIR.ordinal(), localPos); // must 'fool' flood fill
             chunk.chunkFloodFillSeedSet.addCoord(global);
             chunkCoordsToBePriorityFlooded.add(chunkPos);

@@ -14,4 +14,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>lib</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/jME3_2014-06-12/lib</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>

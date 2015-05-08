@@ -119,15 +119,14 @@ public class FloodFill4D implements Runnable
     }
     
     private void updateOutOfBoundsBag() {
-    	List<ChunkSlice> outOfBoundsBagSlices = outOfBoundsBag.getSlices();
-        for(int i=0; i<outOfBoundsBagSlices.size(); ++i) {
+        for(int i=0; i<outOfBoundsBag.getSlices().size(); ++i) {
             if (shouldStop.get()) return;
-            ChunkSlice obbSlice = outOfBoundsBagSlices.get(i);
+            ChunkSlice obbSlice = outOfBoundsBag.getSlices().get(i);
             if (map.getApp().getColumnMap().HasBuiltSurface(obbSlice.getChunkCoord().x, obbSlice.getChunkCoord().z )) {
                 while(obbSlice.size() > 0) {
                     flood(obbSlice.removeNext());
                 }
-                outOfBoundsBagSlices.remove(i--);
+                outOfBoundsBag.getSlices().remove(i--);
             }
         }
     }

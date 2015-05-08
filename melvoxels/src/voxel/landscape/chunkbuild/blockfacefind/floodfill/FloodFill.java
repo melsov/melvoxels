@@ -44,8 +44,8 @@ public class FloodFill
     }
 
     public void floodChunk(ChunkSlice[] chunkSliceShell, Coord3 seedGlobal) {
-        dirtyChunks.add(Chunk.ToChunkPosition(seedGlobal)); // keeps track of edited chunks
-
+        dirtyChunks.add(Chunk.ToChunkPosition(seedGlobal)); 
+        
         ChunkSlice yPosChunkSlice = new ChunkSlice(Direction.YPOS, seedGlobal.add(Coord3.ypos));
         ChunkSlice yNegChunkSlice = new ChunkSlice(Direction.YNEG, seedGlobal.add(Coord3.yneg));
         floodScanLines(chunkSliceShell,yPosChunkSlice, yNegChunkSlice, seedGlobal, FloodFill4D.UntouchedType);
