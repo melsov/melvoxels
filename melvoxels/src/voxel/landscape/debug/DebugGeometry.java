@@ -124,10 +124,26 @@ public class DebugGeometry
     	}
     }
     public static void AddChunk(Coord3 position, ColorRGBA color) {
+		AddChunk(position, color, false);
+    }
+    public static void AddSolidChunk(Coord3 position, ColorRGBA color) {
+    	AddChunk(position, color, true);
+    }
+    private static void AddChunk(Coord3 position, ColorRGBA color, boolean solid) {
     	if (!addChunks.containsKey(position) && addChunkNode.getChild("box" + Chunk.ToWorldPosition(position).toString()) == null) {
-    		Geometry g = makeChunkBox(position, color, true);
+    		Geometry g = makeChunkBox(position, color, solid);
 	        addChunks.put(position, g);
     	}
+    }
+    public static void DeleteAddChunk(Coord3 position) {
+    	Geometry g = null;
+    	if (addChunks.size() > 0)
+	        g = addChunks.remove(position);
+        if (g != null) {
+            if (addChunkNode.getChild(g.getName()) != null) {
+                addChunkNode.detachChildNamed(g.getName());
+            }
+        }
     }
     private static Geometry makeChunkBox(Coord3 position, ColorRGBA color, boolean solid) {
         Coord3 pos = position.clone();

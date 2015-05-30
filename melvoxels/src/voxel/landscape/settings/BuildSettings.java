@@ -10,21 +10,20 @@ import voxel.landscape.coord.*;
 public class BuildSettings {
 
     public static int ADD_COLUMN_RADIUS = 5;
-    public static int PREPARE_COLUMN_RADIUS = ADD_COLUMN_RADIUS + 1;
+    public static int PREPARE_COLUMN_RADIUS = ADD_COLUMN_RADIUS + 3;
     public static int STORE_COLUMN_RADIUS = PREPARE_COLUMN_RADIUS + 2;
 
     private static Box2 AddBox = new Box2(new Coord2(-ADD_COLUMN_RADIUS), new Coord2(ADD_COLUMN_RADIUS * 2));
     private static Box2 PrepareBox = new Box2(new Coord2(-PREPARE_COLUMN_RADIUS), new Coord2(PREPARE_COLUMN_RADIUS * 2));
 
-    public static boolean ChunkCoordWithinPrepareRadius(Vector3f camera, Coord3 chunkCoord) {
+    public static boolean ChunkCoordWithinPrepareArea(Vector3f camera, Coord3 chunkCoord) {
         return ChunkCoordWithinBox(camera, chunkCoord, PrepareBox);
-//        return !ChunkCoordWithinRadius(camera, chunkCoord, PREPARE_COLUMN_RADIUS);
     }
     
-    public static boolean ChunkCoordWithinAddRadius(Vector3f camera, ICoordXZ chunkCoord) {
+    public static boolean ChunkCoordWithinAddArea(Vector3f camera, ICoordXZ chunkCoord) {
         return ChunkCoordWithinBox(camera, chunkCoord, AddBox);
-//        return ChunkCoordWithinRadius(camera, chunkCoord, ADD_COLUMN_RADIUS);
     }
+    
     private static boolean ChunkCoordWithinBox(Vector3f camera, ICoordXZ chunkCoord, Box2 box2) {
         return cameraCenteredBox(camera, box2).contains(new Coord2(chunkCoord.getX(), chunkCoord.getZ()));
     }

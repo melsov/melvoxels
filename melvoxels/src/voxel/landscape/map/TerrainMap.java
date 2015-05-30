@@ -144,8 +144,8 @@ public class TerrainMap implements IBlockDataProvider
 		return IsTranslucent(chunk.blockAt(Chunk.ToChunkLocalCoord(x, y, z)));
 	}
 
-	public void setBlockAtWorldCoord(int block, Coord3 pos) {
-		setBlockAtWorldCoord(block, pos.x, pos.y, pos.z);
+	public void setBlockAtWorldCoord(int block, Coord3 global) {
+		setBlockAtWorldCoord(block, global.x, global.y, global.z);
 	}
 
 	public void setBlockAtWorldCoord(int block, int x, int y, int z) {
@@ -153,6 +153,10 @@ public class TerrainMap implements IBlockDataProvider
 		if (chunk != null) {
             chunk.setBlockAt(block, Chunk.ToChunkLocalCoord(x, y, z));
         }
+	}
+	public synchronized void setBlockUpdateSurface(int block, Coord3 global) {
+		setBlockAtWorldCoord(block, global);
+		updateSurface(global);
 	}
     /*
      * GET IS SET WASIS (BLOCK LOOK UP)
@@ -595,6 +599,7 @@ public class TerrainMap implements IBlockDataProvider
      * Sunlight/Surface
      */
     public boolean isAboveSurface(Coord3 global) { return getSurfaceHeight(global) < global.y;  }
+    public boolean surfaceExists(Coord3 global) { return getSurfaceHeight(global) != 0; }
     public int getSurfaceHeight(Coord3 global) { return getSurfaceHeight(global.x,global.z); }
     public int getSurfaceHeight(int x, int z) { return sunLightmap.GetSunHeight(x,z) - 1; }
     public void setSurfaceHeight(Coord3 global) {
@@ -799,7 +804,8 @@ public class TerrainMap implements IBlockDataProvider
 	public Chunk lookupOrCreateChunkAtPosition(int x, int y, int z) {
 		return lookupOrCreateChunkAtPosition(new Coord3(x, y, z));
 	}
-	public Chunk lookupOrCreateChunkAtPosition(Coord3 chunkPos) {
+	// TODO: two locking mechanisms?
+	public synchronized Chunk lookupOrCreateChunkAtPosition(Coord3 chunkPos) {
         if (!ChunkCoordWithinWorldBounds(chunkPos)) return null;
         // Sets chunk at key if not there before. Returns previous value! (null if nothing was there)
         Chunk result = chunks.putIfKeyIsAbsent(chunkPos, new Chunk(chunkPos, this));
@@ -879,13 +885,7 @@ public class TerrainMap implements IBlockDataProvider
     public String getChunkInfo(Coord3 chunkCoord) {
     	Chunk chunk = getChunk(chunkCoord);
     	if (chunk == null) return "null chunk at: " + chunkCoord.toString();
-    	StringBuilder sb = new StringBuilder();
-    	sb.append("Chunk Info: ");
-    	sb.append(chunkCoord.toString());
-    	sb.append(String.format("\nWrite dirty: %b", chunk.isWriteDirty()));
-    	sb.append(String.format("\nHiding: %b", chunk.getChunkBrain().isHiding()));
-    	sb.append(String.format("\nHas Ever started meshing: %b", chunk.getHasEverStartedMeshing()));
-    	return sb.toString();
+    	return chunk.toString();
     }
 
     /*

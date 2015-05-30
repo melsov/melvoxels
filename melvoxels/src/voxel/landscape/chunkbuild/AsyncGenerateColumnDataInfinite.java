@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.jme3.math.ColorRGBA;
+
 /**
  * Created by didyouloseyourdog on 8/4/14.
  */
@@ -63,7 +65,7 @@ public class AsyncGenerateColumnDataInfinite implements Runnable // extends Resp
                 terrainMap.generateSurface(x, z, dataProvider, touchedChunkCoords);
                 structureBuilder.addStructures(colCoord, terrainMap, dataProvider, touchedChunkCoords);
                 columnMap.SetBuiltSurface(x, z);
-                removeSurfaceNotBuilt(touchedChunkCoords);
+//                removeSurfaceNotBuilt(touchedChunkCoords);
                 for (Coord2 col2 : columnsFromChunkCoords(touchedChunkCoords)) {
                     terrainMap.populateFloodFillSeedsUpdateFaceMapsInChunkColumn(col2.getX(), col2.getZ(), dataProvider, touchedChunkCoords);
                 }
@@ -80,7 +82,7 @@ public class AsyncGenerateColumnDataInfinite implements Runnable // extends Resp
                  */
 
                 terrainMap.updateChunksToBeFlooded(touchedChunkCoords);
-            }
+            } 
         }
     }
     

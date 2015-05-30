@@ -43,5 +43,6 @@ public class ChunkNibble3D extends ChunkPrimitiveType3D {
             return chunk[lookup] >> 4 & 0xf;
         }
     }
+    
 
 }

@@ -1,6 +1,7 @@
 package voxel.landscape;
 
 import com.jme3.scene.Node;
+
 import voxel.landscape.chunkbuild.ChunkBrain;
 import voxel.landscape.chunkbuild.blockfacefind.floodfill.chunkseeds.ChunkFloodFillSeedSet;
 import voxel.landscape.collection.LocalBlockMap;
@@ -17,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static voxel.landscape.player.B.bug;
 /**
  * Owns a mesh representing a 
  * XLEN by YLEN by ZLEN piece of a voxel landscape.  
@@ -83,6 +85,8 @@ public class Chunk
 
     private final Lock lock = new ReentrantLock(true);
 
+	public boolean testBool = false;
+
 //    public static boolean USE_TEST_GEOMETRY = false;
 
 	public Chunk(Coord3 _coord, TerrainMap _terrainMap) {
@@ -96,6 +100,10 @@ public class Chunk
      * Read/Write
      */
     public void readFromFile() {
+	    if (!VoxelLandscape.READ_CHUNKS_FROM_FILE) {
+	    	bug("got here");
+	    	return;
+	    }
        lock.lock();
         try {
             blocks.readFromFile(position);
@@ -149,6 +157,10 @@ public class Chunk
     }
     public boolean canUnhide() {
     	return getChunkBrain().isHiding() && getChunkBrain().hasMeshData() && chunkBlockFaceMap.meshReady();
+    }
+    
+    public boolean blockFaceMapReady() {
+    	return chunkBlockFaceMap.meshReady();
     }
 	
 	public TerrainMap getTerrainMap() { return terrainMap; }
@@ -212,14 +224,28 @@ public class Chunk
 		return blocks.SafeGet(x, y, z);
 	}
 
-	public void setBlockAt(int block, Coord3 co) { setBlockAt(block, co.x, co.y, co.z); }
+	public void setBlockAt(int block, Coord3 co) { 
+		blocks.Set(block, co); // co.x, co.y, co.z); 
+	}
 	
 	public void setBlockAt(int block, int x, int y, int z) {
-        blocks.Set(block, x, y, z);
+        setBlockAt(block, new Coord3(x,z,y));
 	}
 	
 	public Coord3 originInBlockCoords() { return Chunk.ToWorldPosition(position); }
 
     public Object blockLockInstanceAt(Coord3 localCo) { return blockLocks.GetInstance(localCo); }
+    
+    @Override
+    public String toString() {
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("Chunk: ");
+    	sb.append(position.toString());
+    	sb.append(String.format("\nWrite dirty: %b", isWriteDirty()));
+    	sb.append(String.format("\nHiding: %b", getChunkBrain().isHiding()));
+    	sb.append(String.format("\nHas Ever started meshing: %b", getHasEverStartedMeshing()));
+    	return sb.toString();
+    }
+    
 
 }

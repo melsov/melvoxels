@@ -22,7 +22,7 @@ import voxel.landscape.map.TerrainMap;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import static voxel.landscape.player.B.*;
 public class Player 
 {
     private TerrainMap terrainMap;
@@ -47,12 +47,16 @@ public class Player
     private static final float FLY_MODE_MOVE_SPEED = 15f;
 	private static float MOVE_SPEED = NORMAL_MOVE_SPEED;
     private Vector3f inputVelocity = Vector3f.ZERO.clone();
+    private Vector3f moveDone = Vector3f.ZERO.clone();
+    private Vector3f move = Vector3f.ZERO.clone();
+    
     private float jumpVelocity = 0f;
     private static final float JUMP_VELOCITY= 11f;
     private static final float REAL_GRAVITY = 10f;
     private static float gravity = REAL_GRAVITY;
     private boolean grounded = false;
     private boolean jumping = false;
+    private boolean jumpInProgress = false;
     private boolean headBump = false;
     private int blockInHandType = BlockType.DIRT.ordinal();
     public static final int REACHABLE_BLOCK_RADIUS = 12;
@@ -68,7 +72,8 @@ public class Player
     		}
     		else if (name.equals("Place") && !keyPressed) {
     			handlePlaceBlock();
-    		} else if (name.equals("GoHome") && !keyPressed) {
+    		} 
+    		else if (name.equals("GoHome") && !keyPressed) {
                 teleportHome();
             }
             else if (name.equals("Up") && !keyPressed) {
@@ -109,6 +114,25 @@ public class Player
             else if (name.equals("DebugChunk") && !keyPressed) {
                 printChunkInfo();
             }
+            else if (name.equals("moveForward")) {
+                moveDone.z = keyPressed ? 1 : 0;
+            }
+            else if (name.equals("moveBackward")) {
+            	moveDone.z = keyPressed ? 1 : 0;
+            }
+            else if (name.equals("moveRight")) {
+            	moveDone.x = keyPressed ? 1 : 0;
+            }
+            else if (name.equals("moveLeft")) {
+            	moveDone.x =  keyPressed ? 1 : 0;
+            }
+            else if (name.equals("moveUp")) {
+            	moveDone.y =  keyPressed ? 1 : 0;
+            }
+            else if (name.equals("moveDown")) {
+            	moveDone.y =  keyPressed ? 1 : 0;
+            }
+    		
     	}
     };
     private void printBlockCursorInfo() {
@@ -151,37 +175,38 @@ public class Player
 
             if (FLY_MODE != 1 && name.equals("jump") && grounded && !jumping && jumpVelocity < .01  ) {
                 jumping = true;
+                jumpInProgress = true;
                 jumpVelocity = JUMP_VELOCITY;
             }
+            
+            //Allow movement in mid jump too (more fun)
+//            if (!jumpInProgress || FLY_MODE == 1) {
+	            if (name.equals("moveForward") ) {
+	                move.z = MOVE_SPEED;
+	            }
+	            else if (name.equals("moveBackward") ) {
+	                move.z = -MOVE_SPEED;
+	            }
+	            if (name.equals("moveRight") ) {
+	                move.x = -MOVE_SPEED;
+	            }
+	            else if (name.equals("moveLeft") ) {
+	                move.x = MOVE_SPEED;
+	            }
+	            if (name.equals("moveUp") ) {
+	                move.y = MOVE_SPEED;
+	            }
+	            else if (name.equals("moveDown") ) {
+	                move.y = -MOVE_SPEED;
+	            }
 
-            Vector3f move = Vector3f.ZERO.clone();
-            if (name.equals("moveForward") ) {
-                move.z = MOVE_SPEED;
-            }
-            else if (name.equals("moveBackward") ) {
-                move.z = -MOVE_SPEED;
-            }
-            if (name.equals("moveRight") ) {
-                move.x = -MOVE_SPEED;
-            }
-            else if (name.equals("moveLeft") ) {
-                move.x = MOVE_SPEED;
-            }
-            if (name.equals("moveUp") ) {
-                move.y = MOVE_SPEED;
-            }
-            else if (name.equals("moveDown") ) {
-                move.y = -MOVE_SPEED;
-            }
-
-            /*
-            TODO: resolve jump, move direction weirdness (look at Unity character controllers)
-             */
-            float velY = move.y;
-            move.y = 0;
-            Quaternion camro = headNode.getLocalRotation().clone(); // cam.getRotation();
-            turnInputToCamera(camro.mult(move.clone()));
-            inputVelocity.y = velY;
+	            float velY = move.y;
+	            move.y = 0;
+	            move = move.mult(moveDone);
+	            Quaternion camro = headNode.getLocalRotation().clone(); // cam.getRotation();
+	            turnInputToCamera(camro.mult(move.clone()));
+	            inputVelocity.y = velY;
+//            }
         }
     };
     private void turnInputToCamera(Vector3f camV) {
@@ -189,9 +214,7 @@ public class Player
         inputVelocity.z = camV.z;
     }
     private void resetInputVelocity() {
-        inputVelocity.x = 0f;
-        inputVelocity.y = 0f;
-        inputVelocity.z = 0f;
+    	inputVelocity.multLocal(moveDone);
     }
     private void rotatePlayerHead() {
         Vector2f mouse = app.getInputManager().getCursorPosition();
@@ -225,9 +248,11 @@ public class Player
 
         playerNode.move(scaledV);
 
-        if(!jumping) {
+//        if(!jumping) {
+        if (!jumpInProgress) {
             resetInputVelocity();
         }
+        
     }
 
     private Vector3f checkCollisions(final Vector3f curLoc, final Vector3f proposedMove) {
@@ -299,8 +324,16 @@ public class Player
                 }
             }
             grounded = gotGround;
-            if (!gotGround) jumping = false;
+            if (!gotGround) {
+            	jumping = false;
+            	
+            } 
+//            if (gotGround) {
+//            	bug("!"); jumpInProgress = false;
+//            }
         }
+        jumpInProgress = jumpVelocity > 0.001 || !gotGround;
+        
 
         // check for head bump
         boolean gotHeadBump = false;

@@ -6,6 +6,7 @@ import voxel.landscape.VoxelLandscape;
 import voxel.landscape.WorldGenerator;
 import voxel.landscape.coord.Coord2;
 import voxel.landscape.coord.Coord3;
+import voxel.landscape.debug.DebugGeometry;
 import voxel.landscape.map.TerrainMap;
 import voxel.landscape.map.structure.structures.AbstractStructure;
 import voxel.landscape.noise.TerrainDataProvider;
@@ -13,6 +14,9 @@ import voxel.landscape.noise.TerrainDataProvider;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.jme3.math.ColorRGBA;
+
+import static voxel.landscape.player.B.bug;
 /**
  * Created by didyouloseyourdog on 3/28/15.
  */
@@ -61,11 +65,13 @@ public class StructureBuilder {
                     BlockType blockType = structure.getBlocks().get(structureLocal);
                     Coord3 structureGlobal = global.add(structureLocal);
                     Chunk chunk = map.lookupOrCreateChunkAtPosition(Chunk.ToChunkPosition(structureGlobal));
-                    if (chunk == null) continue;
-                    map.setBlockAtWorldCoord(blockType.ordinal(), structureGlobal);
+                    if (chunk == null) {
+                    	bug("*\n");
+                    	continue;
+                    }
+                    map.setBlockUpdateSurface(blockType.ordinal(), structureGlobal);
                     chunk.chunkBlockFaceMap.addExposedFacesUpdateNeighbors(structureGlobal, map);
                     touchedChunkCoords.add(Chunk.ToChunkPosition(structureGlobal));
-                    map.updateSurface(structureGlobal);
                 }
             }
         }

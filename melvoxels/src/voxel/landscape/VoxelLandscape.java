@@ -57,10 +57,8 @@ public class VoxelLandscape extends SimpleApplication
 
 	public static boolean USE_TEXTURE_MAP = false, DEBUG_INFO_ON = false, ADD_CHUNKS_DYNAMICALLY = true, COMPILE_CHUNK_DATA_ASYNC = false,
             CULLING_ON = false, BUILD_INITIAL_CHUNKS = true, DONT_BUILD_CHUNK_MESHES = true, SHOW_COLUMN_DEBUG_QUADS = false, FORCE_WIRE_FRAME = false,
-            BUILD_STRUCTURES = true;
+            BUILD_STRUCTURES = true, DO_USE_TEST_GEOMETRY = true, SHOULD_BUILD_CHUNK_MESH_ASYNC = true, READ_CHUNKS_FROM_FILE = false;
     public static boolean TEST_BLOCK_FACE_MESH_BUILDING = true;
-    public static boolean READ_CHUNKS_FROM_FILE = false;
-    public static boolean TESTING_DEBUGGING_ON = false, DO_USE_TEST_GEOMETRY = true, SHOULD_BUILD_CHUNK_MESH_ASYNC = true;
 
     private WorldGenerator worldGenerator;
 	private TerrainMap terrainMap;
@@ -75,22 +73,23 @@ public class VoxelLandscape extends SimpleApplication
     private static float GameTime = 0f;
 	private static Coord2 screenDims;
     private WireProcessor wireProcessor;
-
+    
+    public static boolean TESTING_DEBUGGING_ON = true;
     private static void setupTestStateVariables()
     {
         if (TESTING_DEBUGGING_ON) {
-            USE_TEXTURE_MAP = false;
+        	USE_TEXTURE_MAP = true;
             DEBUG_INFO_ON = false;
-            ADD_CHUNKS_DYNAMICALLY = false;
+            ADD_CHUNKS_DYNAMICALLY = true;
             COMPILE_CHUNK_DATA_ASYNC = true;
             DO_USE_TEST_GEOMETRY = false;
-            CULLING_ON = true;
-            BUILD_INITIAL_CHUNKS = true;
+            CULLING_ON = false;
+            BUILD_INITIAL_CHUNKS = false;
             DONT_BUILD_CHUNK_MESHES = false;
             SHOW_COLUMN_DEBUG_QUADS = false;
-            TEST_BLOCK_FACE_MESH_BUILDING = false;
+            TEST_BLOCK_FACE_MESH_BUILDING = true;
             FORCE_WIRE_FRAME = true;
-            BUILD_STRUCTURES = false;
+            BUILD_STRUCTURES = true;
             READ_CHUNKS_FROM_FILE = false;
         } else {
             USE_TEXTURE_MAP = true;
@@ -98,7 +97,7 @@ public class VoxelLandscape extends SimpleApplication
             ADD_CHUNKS_DYNAMICALLY = true;
             COMPILE_CHUNK_DATA_ASYNC = true;
             DO_USE_TEST_GEOMETRY = false;
-            CULLING_ON = true;
+            CULLING_ON = false;
             BUILD_INITIAL_CHUNKS = false;
             DONT_BUILD_CHUNK_MESHES = false;
             SHOW_COLUMN_DEBUG_QUADS = false;
@@ -258,6 +257,10 @@ public class VoxelLandscape extends SimpleApplication
 //        inputManager.addMapping("rmb", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
         inputManager.addListener(player.getAnalogListener(),
                 "moveForward", "moveBackward", "moveRight", "moveLeft", "moveDown", "moveUp", "jump",
+                "lmb", "rmb");
+        
+        // To detect key releases also give WASD QE to the input listener
+        inputManager.addListener(player.getUserInputListener(), "moveForward", "moveBackward", "moveRight", "moveLeft", "moveDown", "moveUp", "jump",
                 "lmb", "rmb");
     }
 

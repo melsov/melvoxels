@@ -44,7 +44,7 @@ public class FloodFill
     }
 
     public void floodChunk(ChunkSlice[] chunkSliceShell, Coord3 seedGlobal) {
-        dirtyChunks.add(Chunk.ToChunkPosition(seedGlobal)); 
+        dirtyChunks.add(Chunk.ToChunkPosition(seedGlobal));
         
         ChunkSlice yPosChunkSlice = new ChunkSlice(Direction.YPOS, seedGlobal.add(Coord3.ypos));
         ChunkSlice yNegChunkSlice = new ChunkSlice(Direction.YNEG, seedGlobal.add(Coord3.yneg));
@@ -87,7 +87,7 @@ public class FloodFill
         return debugBox.contains(co);
     }
 
-    /*
+    /**
      * Finds transparent blocks (mostly air) below the surface in a given chunk, starting at a given seed coord
      * @param initialSeedGlobal
      * Uses the scan lines algorithm.
@@ -120,10 +120,13 @@ public class FloodFill
         int[] yPOSWasIs = new int[2];
 
         getCurrentWasIsWithinChunk(initialSeedGlobal, seedChunk, thisCoordWasIs, untouchedType);
-//        if (map.isAboveSurface(initialSeedGlobal) || !BlockType.IsNonExistentOrPlaceHolderAir(thisCoordWasIs[0])) {
 
-        if (map.isAboveSurface(initialSeedGlobal) || BlockType.IsFloodFilledAir(thisCoordWasIs[0])) {
+        if (map.isAboveSurface(initialSeedGlobal)) {
+        	DebugGeometry.AddDebugBlock(initialSeedGlobal, ColorRGBA.Cyan);
             return;
+        }
+        if (BlockType.IsFloodFilledAir(thisCoordWasIs[0])) {
+        	return;
         }
 
         seeds.add(initialSeedGlobal);
@@ -136,7 +139,7 @@ public class FloodFill
         exhaustSeeds : while(seeds.size() > 0) {
             Coord3 seed = seeds.remove(0);
             int blockTypeTest = map.lookupOrCreateBlock(seed);
-            if (BlockType.IsFloodFilledAir(blockTypeTest) || map.isAboveSurface(seed) || BlockType.IsSolid(blockTypeTest)) {
+            if (BlockType.IsFloodFilledAir(blockTypeTest) || map.isAboveSurface(seed) || BlockType.IsSolid(blockTypeTest)  || !map.surfaceExists(seed)) {
             	continue;
             }
             Asserter.assertTrue(!(BlockType.IsSolid(blockTypeTest)), "most unusual seed block is solid");
@@ -144,7 +147,6 @@ public class FloodFill
             Asserter.assertTrue(!(BlockType.IsFloodFilledAir(blockTypeTest)), "most unusual seed block is flood-fill air");
             Asserter.assertTrue(chunkBox.contains(seed), "Chunk box: " + chunkBox.toString() + " doesn't contain seed: " + seed.debugCoordAndChunkCoord());
             z1 = seed.z;
-
 
             Coord3 lessZNEGCoord = null;
             Coord3 previousZNEGForLight = null;
@@ -164,7 +166,7 @@ public class FloodFill
 
                 blockType = map.lookupOrCreateBlock(lessZNEGCoord);
                 addFaceForType(seedChunk, chunkBox, lessZNEGCoord, Direction.ZPOS, blockType);
-                if (BlockType.IsSolid(blockType) || map.isAboveSurface(lessZNEGCoord) || BlockType.IsFloodFilledAir(blockType)) {
+                if (BlockType.IsSolid(blockType) || map.isAboveSurface(lessZNEGCoord) || BlockType.IsFloodFilledAir(blockType)  || !map.surfaceExists(lessZNEGCoord)) {
                 	if (oneIteration) {
 	                    z1++;
 	                    break;
@@ -230,7 +232,7 @@ public class FloodFill
                  * ZPOS: hit a wall?
                  * */
                 addFaceForType(seedChunk, chunkBox, subject, Direction.ZNEG, thisCoordWasIs[1]);
-                if (BlockType.IsSolid(thisCoordWasIs[1]) || map.isAboveSurface(subject) || BlockType.IsFloodFilledAir(thisCoordWasIs[1])) {
+                if (BlockType.IsSolid(thisCoordWasIs[1]) || map.isAboveSurface(subject) || BlockType.IsFloodFilledAir(thisCoordWasIs[1]) || !map.surfaceExists(subject)) {
                     break;
                 }
                 setFloodFilledAirIfAir(subject, thisCoordWasIs[1]);

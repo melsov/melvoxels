@@ -49,6 +49,10 @@ public class ChunkUByte2D extends ChunkPrimitiveType2D
         } catch (IOException e) {
             e.printStackTrace();
         }
+//        Asserter.assertTrue(Chunk.CHUNKDIMS.x*Chunk.CHUNKDIMS.z == chunk.length, "hmm.. wrong length: " + chunk.length + "path: \n" +path.toString());
+        if (chunk.length < Chunk.CHUNKDIMS.x*Chunk.CHUNKDIMS.z){
+        	chunk =  new byte [Chunk.CHUNKDIMS.x*Chunk.CHUNKDIMS.z];
+        }
     }
 
 	

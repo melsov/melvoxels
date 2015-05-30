@@ -1,6 +1,9 @@
 package voxel.landscape;
 
 import com.jme3.asset.AssetManager;
+
+import static voxel.landscape.player.B.bug;
+
 import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
@@ -26,6 +29,8 @@ import voxel.landscape.player.B;
 import voxel.landscape.settings.BuildSettings;
 import voxel.landscape.util.Asserter;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -99,7 +104,7 @@ public class WorldGenerator {
 	public void update(float tpf) {
 		addColumns();
 		if (!VoxelLandscape.DONT_BUILD_CHUNK_MESHES) {
-			buildAChunk();
+			buildChunks();
 		}
 		renderChunks();
 		cull();
@@ -161,43 +166,53 @@ public class WorldGenerator {
 		// Coords
 		// would ensure that Chunks that wanted to be in memory still, still
 		// were in memory?
-		for (Coord2 column : BuildSettings.addColumnsBox(camera.getLocation())) {
+		for (Coord2 column : BuildSettings.prepareColumnsBox(camera.getLocation())) {
 			Coord3 emptyCol = new Coord3(column.getX(), 0, column.getZ());
 			removeFromUnloadLists(new Coord2(emptyCol.x, emptyCol.z));
+			/* column not yet seen? submit column for build */
 			if (!columnsToBeBuilt.contains(column) && !columnMap.IsBuiltOrIsBuilding(emptyCol.x, emptyCol.z)) {
 				columnsToBeBuilt.add(new Coord2(emptyCol.x, emptyCol.z));
 			} else {
-				if (BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), emptyCol)) {
+				/*
+				 * TODO: CONSIDER: this logic may be bad. since we iterate over the same coords a lot
+				 * its easy to buildThisChunk and do other things to not yet processed chunks
+				 * MAYBE: use a set to keep track of any chunk coords that are known to be ready?
+				 * Or figure out why this would be redundant (such a set) and use the 'set' you already have.
+				 */
+				if (BuildSettings.ChunkCoordWithinAddArea(camera.getLocation(), emptyCol)) {
 					for (Coord3 coord3 : new ColumnRange(emptyCol)) {
 						Chunk chunk = map.getChunk(coord3);
-						if (chunk != null && chunk.canUnhide()) {
+						if (chunk == null) continue;
+						if (chunk.canUnhide()) {
+							DebugGeometry.AddChunk(chunk.position, ColorRGBA.Magenta);
 							attachMeshToScene(chunk);
+						}
+						else {
+							if (!chunk.hasNoBlocks()) {
+								if (chunk.blockFaceMapReady()) {
+									if (!chunk.testBool) {
+										chunk.testBool = true;
+//										buildThisChunk(chunk);
+									}
+//									if (!chunk.getHasEverStartedMeshing()){										
+//										buildThisChunk(chunk);
+//									}
+									
+								}
+//								if(!chunk.getChunkBrain().hasMeshData()) {
+//									if (!chunk.getHasEverStartedMeshing()){
+//										DebugGeometry.AddChunk(chunk.position, ColorRGBA.Blue);										
+//										chunk.setHasEverStartedMeshingTrue();
+//									}
+//								}
+
+							}
 						}
 					}
 				}
 			}
-			if (columnsToBeBuilt.size() > 300) {
-				Asserter.assertFalseAndDie("columns to be built size: " + columnsToBeBuilt.size());
-				return;
-			}
 		}
-	}
-
-	private void addColumn(Coord3 emptyCol) {
-		if (emptyCol == null)
-			return;
-		removeFromUnloadLists(new Coord2(emptyCol.x, emptyCol.z));
-		if (!columnsToBeBuilt.contains(new Coord2(emptyCol.x, emptyCol.z))
-				&& !columnMap.IsBuiltOrIsBuilding(emptyCol.x, emptyCol.z)) {
-			columnsToBeBuilt.add(new Coord2(emptyCol.x, emptyCol.z));
-		} else if (map.columnHasHiddenChunk(emptyCol)) {
-			for (Coord3 coord3 : new ColumnRange(emptyCol)) {
-				Chunk chunk = map.getChunk(coord3);
-				if (chunk != null) {
-					buildThisChunk(chunk);
-				}
-			}
-		}
+		Asserter.assertTrue(columnsToBeBuilt.size() < 300, "lots of cols to be built?");
 	}
 
 	private void removeFromUnloadLists(Coord2 column) {
@@ -207,14 +222,26 @@ public class WorldGenerator {
 		}
 	}
 
-	private void buildAChunk() {
+	//DBUG
+	Set<Coord3> testDupesSet = new HashSet<>(50);
+	private void addTestDupes(Coord3 co) {
+		if (testDupesSet.contains(co)) {
+			DebugGeometry.AddSolidChunk(co, ColorRGBA.Orange);
+		}
+		testDupesSet.add(co);
+	}
+	
+	private void buildChunks() {
 		for (int i = 0; i < 20; ++i) {
 			Coord3 chunkCoord = shortOrderBlockFaceFinder.floodFilledChunkCoords.poll();
-			if (chunkCoord == null)
-				chunkCoord = blockFaceFinder.floodFilledChunkCoords.poll();
 			if (chunkCoord == null) {
+				// TODO: test whether this gets duplicate chunk coords sometimes... 
+				// if it does...consequences...
+				chunkCoord = blockFaceFinder.floodFilledChunkCoords.poll();
+			} if (chunkCoord == null) {
 				return;
 			}
+			addTestDupes(chunkCoord);
 			if (map.getChunk(chunkCoord) == null) {
 				DebugGeometry.AddAddChunk(chunkCoord);
 				return;
@@ -225,15 +252,21 @@ public class WorldGenerator {
 		}
 	}
 
+	/* what this really does:
+	 * makes and attaches an empty mesh for the chunk
+	 * makes a chunkMeshBuildingSet for the chunk
+	 * and adds that chunkMeshBuildingSet to 'chunksToBeMeshed'
+	 * CONSIDER: simplify this process? (last step is the only essential part at this point) */
 	private void buildThisChunk(Chunk chunk) {
+		if (chunk.getHasEverStartedMeshing()) {
+			DebugGeometry.AddSolidChunk(chunk.position, ColorRGBA.Red);
+		}
 		chunk.setHasEverStartedMeshingTrue();
 		if (!chunk.getIsAllAir()) {
 			chunk.getChunkBrain().SetDirty();
 			chunk.getChunkBrain().wakeUp();
-			attachMeshToScene(chunk); // NOTE: attaching empty mesh, no mesh
-										// geom yet
+			attachMeshToScene(chunk); // NOTE: attaching empty mesh, no mesh geometry yet
 		} else {
-			DebugGeometry.AddChunk(chunk.position, ColorRGBA.Brown);
 			chunk.getChunkBrain().setMeshEmpty();
 		}
 	}
@@ -252,6 +285,7 @@ public class WorldGenerator {
 		for (int count = 0; count < 5; ++count) {
 			ChunkMeshBuildingSet chunkMeshBuildingSet = completedChunkMeshSets.poll();
 			if (chunkMeshBuildingSet == null) {
+				//bug("*"); //HAPPENS A LOT. WHY?
 				continue;
 			}
 			// write to file and don't mesh chunk?
@@ -261,19 +295,21 @@ public class WorldGenerator {
 				DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Magenta);
 				continue;
 			}
-			if (!BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), chunkMeshBuildingSet.chunkPosition)) {
-				if (chunk.hasNoBlocks() ) {
+			if (!BuildSettings.ChunkCoordWithinAddArea(camera.getLocation(), chunkMeshBuildingSet.chunkPosition)) {
+				if (chunk.hasNoBlocks()) {
 					DebugGeometry.AddChunk(chunk.position, ColorRGBA.Gray);
 				} else if (!chunk.getChunkBrain().hasMeshData()) {
-					DebugGeometry.AddChunk(chunk.position, ColorRGBA.Brown);
-				} else {
-					DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Red);
-				}
+					// THIS HAPPENS: TODO: HOW TO REACT? (AND HOW DOES IT HAPPEN: ASYNCHRONOUS UNINTENDEDNESS)
+//					DebugGeometry.AddSolidChunk(chunk.position, ColorRGBA.Brown);
+				} 
+				
 				slateForUnload(map.getChunk(chunkMeshBuildingSet.chunkPosition));
 				continue;
 			}
 			Asserter.assertTrue(chunk != null, "null chunk in renderChunks...");
+			DebugGeometry.DeleteAddChunk(chunk.position);
 			chunk.getChunkBrain().applyMeshBuildingSet(chunkMeshBuildingSet);
+			
 		}
 	}
 
@@ -289,14 +325,18 @@ public class WorldGenerator {
 	}
 
 	private void unloadChunks() {
+		if (!VoxelLandscape.CULLING_ON)
+			return;
 		for (Coord3 chunkCoord : furthestChunkFinder.outsideOfAddRangeChunks(map, camera, columnMap)) {
-			if (!BuildSettings.ChunkCoordWithinAddRadius(camera.getLocation(), chunkCoord)) {
+			if (!BuildSettings.ChunkCoordWithinAddArea(camera.getLocation(), chunkCoord)) {
 				slateForUnload(map.getChunk(chunkCoord));
 			}
 		}
 	}
 
 	private void slateForUnload(Chunk chunk) {
+		if (!VoxelLandscape.CULLING_ON)
+			return;
 		if (chunk == null) {
 			return;
 		}
@@ -328,6 +368,8 @@ public class WorldGenerator {
 	}
 
 	private void removeChunks() {
+		if (!VoxelLandscape.CULLING_ON)
+			return;
 		while (deletableChunks.size() > 0) {
 			removeChunk(deletableChunks.poll());
 		}
@@ -336,7 +378,7 @@ public class WorldGenerator {
 	private void removeChunk(Coord3 chunkCoord) {
 		if (chunkCoord == null)
 			return;
-		if (BuildSettings.ChunkCoordWithinPrepareRadius(camera.getLocation(), chunkCoord)) {
+		if (BuildSettings.ChunkCoordWithinPrepareArea(camera.getLocation(), chunkCoord)) {
 			return;
 		}
 
@@ -374,6 +416,15 @@ public class WorldGenerator {
 		map.chunkCoordsToBePriorityFlooded.add(Coord3.SPECIAL_FLAG);
 		unloadChunks.add(Coord3.SPECIAL_FLAG);
 		chunksToBeMeshed.add(ChunkMeshBuildingSet.POISON_PILL);
+	}
+	
+	private Coord3 camChunkCoord = new Coord3(0);
+	private void debugCameraLocation() {
+		Coord3 nextCamChunkCoord = Chunk.ToChunkPosition(Coord3.FromVector3f(camera.getLocation()));
+		if (!nextCamChunkCoord.equal(camChunkCoord)) {
+			camChunkCoord = nextCamChunkCoord;
+			bug(camChunkCoord);
+		}
 	}
 
 }

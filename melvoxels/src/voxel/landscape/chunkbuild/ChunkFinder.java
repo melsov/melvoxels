@@ -278,7 +278,7 @@ public class ChunkFinder {
             return new Coord3(0);
         }
         Coord3 result = ClosestColumn(cam, terrainMap, columnMap); // ***** WANT
-        if (limitToAddRadius && result != null && !BuildSettings.ChunkCoordWithinAddRadius(cam.getLocation(), result)) return null;
+        if (limitToAddRadius && result != null && !BuildSettings.ChunkCoordWithinAddArea(cam.getLocation(), result)) return null;
         return result;
     }
 

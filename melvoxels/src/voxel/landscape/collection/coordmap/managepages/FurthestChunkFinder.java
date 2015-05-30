@@ -63,7 +63,7 @@ public class FurthestChunkFinder
         ICoordXZ coordXZ;
         for(int i=0; i < columnCoords.length; ++i) {
             coordXZ = (ICoordXZ) columnCoords[i];
-            if (!BuildSettings.ChunkCoordWithinAddRadius(cam.getLocation(), coordXZ)) {
+            if (!BuildSettings.ChunkCoordWithinAddArea(cam.getLocation(), coordXZ)) {
                 for (Coord3 chunkCoord : new ColumnRange(coordXZ)) {
                     result.add(chunkCoord);
                 }

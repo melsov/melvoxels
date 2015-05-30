@@ -30,6 +30,7 @@ public class AsyncMeshBuilder implements Runnable
     public void run() {
         Thread.currentThread().setName("Async-Mesh-Builder-Thread-" + instanceCount++);
         while (true) {
+        	if (VoxelLandscape.DO_USE_TEST_GEOMETRY) return;
             Chunk chunk = null;
             ChunkMeshBuildingSet chunkMeshBuildingSet = null;
             try {
@@ -39,15 +40,9 @@ public class AsyncMeshBuilder implements Runnable
                     return;
                 }
                 chunk = terrainMap.getChunk(chunkMeshBuildingSet.chunkPosition);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            } catch (InterruptedException e) { e.printStackTrace(); }
 
-            if (chunk == null) {
-                continue;
-            }
-
-            if (VoxelLandscape.DO_USE_TEST_GEOMETRY) return;
+            if (chunk == null) continue;
 
             MeshSet mset = new MeshSet(false, chunkMeshBuildingSet.isOnlyLight);
             MeshSet waterMSet = new MeshSet(true, chunkMeshBuildingSet.isOnlyLight);

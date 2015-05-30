@@ -2,6 +2,7 @@ package voxel.landscape.chunkbuild.blockfacefind.floodfill;
 
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+
 import voxel.landscape.BlockType;
 import voxel.landscape.Chunk;
 import voxel.landscape.WorldGenerator;
@@ -78,8 +79,15 @@ public class FloodFill4D implements Runnable
 
     public static final boolean DONT_ACTUALLY_FLOOD_FILL = false;
     public void startFlood(Coord3 chunkCoord) {
-        // * SHORT CIRCUIT THE WHOLE FLOOD FILL (DON'T FLOOD FILL--for testing) *
-        if (DONT_ACTUALLY_FLOOD_FILL || WorldGenerator.TEST_DONT_BUILD) { try { floodFilledChunkCoords.put(chunkCoord); } catch (InterruptedException e) { e.printStackTrace(); } return; }
+        // * SHORT CIRCUIT THE WHOLE FLOOD FILL (for testing) *
+        if (DONT_ACTUALLY_FLOOD_FILL || WorldGenerator.TEST_DONT_BUILD) {
+        	try {
+				Thread.sleep(1); //TEST ARTIFICIAL WAIT
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+        	try { floodFilledChunkCoords.put(chunkCoord); } catch (InterruptedException e) { e.printStackTrace(); } return; 
+        }
 
         Chunk chunk = map.getChunk(chunkCoord);
         Asserter.assertChunkNotNull(chunk, chunkCoord);
@@ -89,30 +97,10 @@ public class FloodFill4D implements Runnable
             if (shouldStop.get()) return;
             flood(chunk.chunkFloodFillSeedSet.removeNext());
         }
-        
-        //TODO: reexamine inBounds/outOfBounds Bags. 
-        // maybe, just empty the ooB 'more thoroughly?' 
-        // like go through all surface
-
-        /*
-         * CHECK THE COLUMN OF THIS CHUNK CO
-         * SEE IF THERE ARE ANY SLICES IN THE OUTOFBOUNDS-BAG IN THIS COLUMN
-         * IF SO, REMOVE THEM AND FLOOD FILL WITH THEM
-         */
-//        List<ChunkSlice> outOfBoundsBagSlices = outOfBoundsBag.getSlices();
-//        for(int i=0; i<outOfBoundsBagSlices.size(); ++i) {
-//            if (shouldStop.get()) return;
-//            ChunkSlice obbSlice = outOfBoundsBagSlices.get(i);
-//            if (obbSlice.getChunkCoord().x == chunkCoord.x && obbSlice.getChunkCoord().z == chunkCoord.z) {
-//                while(obbSlice.size() > 0) {
-//                    flood(obbSlice.removeNext());
-//                }
-//                outOfBoundsBagSlices.remove(i--);
-//            }
-//        }
         updateOutOfBoundsBag();
         if (shouldStop.get()) return;
-        // if there were no seeds (no overhangs) we still need to pass this chunk coord along
+        
+        // if there were no seeds, we still need to pass this chunk coord along
         if (originalChunkCoordWasNeverAdded) {
             try { floodFilledChunkCoords.put(chunkCoord); } catch (InterruptedException e) { e.printStackTrace(); }
         }
@@ -135,7 +123,9 @@ public class FloodFill4D implements Runnable
         if (floodFill.dirtyChunks.size() == 0) return;
 		Coord3[] dirtyChunks = floodFill.dirtyChunks.toArray(new Coord3[floodFill.dirtyChunks.size()]);
         for(Coord3 dirty : dirtyChunks) {
-            try { floodFilledChunkCoords.put(dirty); } catch (InterruptedException e) { e.printStackTrace(); }
+        	if (!floodFilledChunkCoords.contains(dirty)) {
+	            try { floodFilledChunkCoords.put(dirty); } catch (InterruptedException e) { e.printStackTrace(); }
+        	}
             floodFill.dirtyChunks.remove(dirty);
         }
     }
