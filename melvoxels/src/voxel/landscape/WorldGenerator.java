@@ -11,7 +11,7 @@ import com.jme3.scene.Node;
 import voxel.landscape.chunkbuild.AsyncGenerateColumnDataInfinite;
 import voxel.landscape.chunkbuild.ChunkCoordCamComparator;
 import voxel.landscape.chunkbuild.MaterialLibrarian;
-import voxel.landscape.chunkbuild.blockfacefind.BlockFaceFinder;
+import voxel.landscape.chunkbuild.blockfacefind.FloodFillBoss;
 import voxel.landscape.chunkbuild.bounds.XZBounds;
 import voxel.landscape.chunkbuild.meshbuildasync.AsyncMeshBuilder;
 import voxel.landscape.chunkbuild.meshbuildasync.ChunkMeshBuildingSet;
@@ -69,8 +69,8 @@ public class WorldGenerator {
 	public final ColumnMap columnMap;
 	public final MaterialLibrarian materialLibrarian;
 
-	public final BlockFaceFinder blockFaceFinder;
-	public final BlockFaceFinder shortOrderBlockFaceFinder;
+	public final FloodFillBoss floodFillBoss;
+	public final FloodFillBoss shortOrderFloodFillBoss;
 
 	public static final String BGFloodFillThreadName = "Background Flood-Fill Thread";
 	public static final String ShortOrderFloodFillThreadName = "Short-order Flood-Fill Thread";
@@ -84,8 +84,8 @@ public class WorldGenerator {
 		camera = _camera;
 		map = _map;
 		columnMap = _columnMap;
-		blockFaceFinder = new BlockFaceFinder(map, map.chunkCoordsToBeFlooded, camera, null, BGFloodFillThreadName);
-		shortOrderBlockFaceFinder = new BlockFaceFinder(map, map.chunkCoordsToBePriorityFlooded, camera, null,
+		floodFillBoss = new FloodFillBoss(map, map.chunkCoordsToBeFlooded, camera, null, BGFloodFillThreadName);
+		shortOrderFloodFillBoss = new FloodFillBoss(map, map.chunkCoordsToBePriorityFlooded, camera, null,
 				ShortOrderFloodFillThreadName);
 		materialLibrarian = new MaterialLibrarian(_assetManager);
 
@@ -95,8 +95,8 @@ public class WorldGenerator {
 	private void initThreadPools() {
 		initColumnDataThreadExecutorService();
 		// initLightAndWaterScatterService();
-		blockFaceFinder.start();
-		shortOrderBlockFaceFinder.start();
+		floodFillBoss.start();
+		shortOrderFloodFillBoss.start();
 		initChunkMeshBuildThreadExecutorService();
 		initUnloadService();
 	}
@@ -226,22 +226,21 @@ public class WorldGenerator {
 	Set<Coord3> testDupesSet = new HashSet<>(50);
 	private void addTestDupes(Coord3 co) {
 		if (testDupesSet.contains(co)) {
-			DebugGeometry.AddSolidChunk(co, ColorRGBA.Orange);
+			DebugGeometry.AddChunk(co, ColorRGBA.Orange);
 		}
 		testDupesSet.add(co);
 	}
 	
 	private void buildChunks() {
 		for (int i = 0; i < 20; ++i) {
-			Coord3 chunkCoord = shortOrderBlockFaceFinder.floodFilledChunkCoords.poll();
+			Coord3 chunkCoord = shortOrderFloodFillBoss.floodFilledChunkCoords.poll();
 			if (chunkCoord == null) {
 				// TODO: test whether this gets duplicate chunk coords sometimes... 
 				// if it does...consequences...
-				chunkCoord = blockFaceFinder.floodFilledChunkCoords.poll();
+				chunkCoord = floodFillBoss.floodFilledChunkCoords.poll();
 			} if (chunkCoord == null) {
 				return;
 			}
-			addTestDupes(chunkCoord);
 			if (map.getChunk(chunkCoord) == null) {
 				DebugGeometry.AddAddChunk(chunkCoord);
 				return;
@@ -258,14 +257,15 @@ public class WorldGenerator {
 	 * and adds that chunkMeshBuildingSet to 'chunksToBeMeshed'
 	 * CONSIDER: simplify this process? (last step is the only essential part at this point) */
 	private void buildThisChunk(Chunk chunk) {
-		if (chunk.getHasEverStartedMeshing()) {
-			DebugGeometry.AddSolidChunk(chunk.position, ColorRGBA.Red);
-		}
+//		if (chunk.getHasEverStartedMeshing()) {
+//			DebugGeometry.AddSolidChunk(chunk.position, ColorRGBA.Red);
+//		}
 		chunk.setHasEverStartedMeshingTrue();
 		if (!chunk.getIsAllAir()) {
 			chunk.getChunkBrain().SetDirty();
 			chunk.getChunkBrain().wakeUp();
 			attachMeshToScene(chunk); // NOTE: attaching empty mesh, no mesh geometry yet
+			addTestDupes(chunk.position);
 		} else {
 			chunk.getChunkBrain().setMeshEmpty();
 		}
@@ -401,8 +401,8 @@ public class WorldGenerator {
 		// asyncChunkMeshThreadsShouldKeepGoing.set(false);
 		chunkMeshBuildPool.shutdownNow();
 
-		blockFaceFinder.shutdown();
-		shortOrderBlockFaceFinder.shutdown();
+		floodFillBoss.shutdown();
+		shortOrderFloodFillBoss.shutdown();
 
 		// columnRemovalShouldKeepGoing.set(false);
 		if (chunkUnloadService != null) {

@@ -164,6 +164,9 @@ public class Player
             gravity = REAL_GRAVITY;
             MOVE_SPEED = NORMAL_MOVE_SPEED;
         }
+        moveDone.multLocal(0);
+        resetInputVelocity();
+        
 
     }
     private void nextBlockInHandType() {
@@ -237,7 +240,7 @@ public class Player
             inputVelocity.x = MOVE_SPEED;
         }
         Vector3f scaledV = inputVelocity.clone();
-        if ((grounded && jumpVelocity < .01) || headBump) {
+        if (FLY_MODE == 1 || (grounded && jumpVelocity < .01) || headBump) {
             jumpVelocity = 0f;
         } else {
             scaledV.y += jumpVelocity;
@@ -248,8 +251,7 @@ public class Player
 
         playerNode.move(scaledV);
 
-//        if(!jumping) {
-        if (!jumpInProgress) {
+        if (!jumpInProgress || FLY_MODE == 1) {
             resetInputVelocity();
         }
         
@@ -269,7 +271,7 @@ public class Player
 
         /* check for side walls */
         // Go through all of the XZ directions in a for loop
-        // get the xzUnitVec is a 'unit vector' for the direction in question: example for XPOS: (1, 0, 0). for ZNEG (0, 0, -1)
+        // xzUnitVec is a 'unit vector' for the direction in question: example for XPOS: (1, 0, 0). for ZNEG (0, 0, -1)
         // xzPlayerEdge is the unit vector * player Half Width: example for XPOS (.4, 0, 0). ZNEG (0, 0, -.4)
         // xzEdgePos is the proposedLoc + xzPlayerEdge: if proposed loc is (3.61, 0, 0) then -> (for XPOS) -> (4.01, 0, 0)
         // Coord3 edge is the integer version of xzEdgePos. example (4, 0, 0). Use this last to look up the corresponding
@@ -324,13 +326,7 @@ public class Player
                 }
             }
             grounded = gotGround;
-            if (!gotGround) {
-            	jumping = false;
-            	
-            } 
-//            if (gotGround) {
-//            	bug("!"); jumpInProgress = false;
-//            }
+            if (!gotGround) jumping = false; //CONSIDER: wait, this is counter-intuitive nomenclature-wise?
         }
         jumpInProgress = jumpVelocity > 0.001 || !gotGround;
         
@@ -338,8 +334,7 @@ public class Player
         // check for head bump
         boolean gotHeadBump = false;
         if (jumpVelocity > 0) {
-//            float headRoom = -playerBodyOffset.y + .7f;
-            float headRoom = height + .1f; // + .7f;
+            float headRoom = height + .1f;
             pco = Coord3.FromVector3fAdjustNegative(proposedLoc.add(0, headRoom, 0));
             if (BlockType.IsSolid(terrainMap.lookupBlock(pco))){
                 proposedLoc.y = pco.y - headRoom - .1f;

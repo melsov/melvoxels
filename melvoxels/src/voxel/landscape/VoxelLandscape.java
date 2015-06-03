@@ -77,7 +77,7 @@ public class VoxelLandscape extends SimpleApplication
     public static boolean TESTING_DEBUGGING_ON = true;
     private static void setupTestStateVariables()
     {
-        if (TESTING_DEBUGGING_ON) {
+//        if (TESTING_DEBUGGING_ON) {
         	USE_TEXTURE_MAP = true;
             DEBUG_INFO_ON = false;
             ADD_CHUNKS_DYNAMICALLY = true;
@@ -89,23 +89,23 @@ public class VoxelLandscape extends SimpleApplication
             SHOW_COLUMN_DEBUG_QUADS = false;
             TEST_BLOCK_FACE_MESH_BUILDING = true;
             FORCE_WIRE_FRAME = true;
-            BUILD_STRUCTURES = true;
+            BUILD_STRUCTURES = false;
             READ_CHUNKS_FROM_FILE = false;
-        } else {
-            USE_TEXTURE_MAP = true;
-            DEBUG_INFO_ON = false;
-            ADD_CHUNKS_DYNAMICALLY = true;
-            COMPILE_CHUNK_DATA_ASYNC = true;
-            DO_USE_TEST_GEOMETRY = false;
-            CULLING_ON = false;
-            BUILD_INITIAL_CHUNKS = false;
-            DONT_BUILD_CHUNK_MESHES = false;
-            SHOW_COLUMN_DEBUG_QUADS = false;
-            TEST_BLOCK_FACE_MESH_BUILDING = true;
-            FORCE_WIRE_FRAME = true;
-            BUILD_STRUCTURES = true;
-            READ_CHUNKS_FROM_FILE = false;
-        }
+//        } else {
+//            USE_TEXTURE_MAP = true;
+//            DEBUG_INFO_ON = false;
+//            ADD_CHUNKS_DYNAMICALLY = true;
+//            COMPILE_CHUNK_DATA_ASYNC = true;
+//            DO_USE_TEST_GEOMETRY = false;
+//            CULLING_ON = false;
+//            BUILD_INITIAL_CHUNKS = false;
+//            DONT_BUILD_CHUNK_MESHES = false;
+//            SHOW_COLUMN_DEBUG_QUADS = false;
+//            TEST_BLOCK_FACE_MESH_BUILDING = true;
+//            FORCE_WIRE_FRAME = true;
+//            BUILD_STRUCTURES = true;
+//            READ_CHUNKS_FROM_FILE = false;
+//        }
     }
 
     public WorldGenerator getWorldGenerator() { return worldGenerator; }

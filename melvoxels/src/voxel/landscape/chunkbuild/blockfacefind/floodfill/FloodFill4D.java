@@ -6,6 +6,7 @@ import com.jme3.renderer.Camera;
 import voxel.landscape.BlockType;
 import voxel.landscape.Chunk;
 import voxel.landscape.WorldGenerator;
+import voxel.landscape.chunkbuild.blockfacefind.FloodFillBoss;
 import voxel.landscape.chunkbuild.blockfacefind.floodfill.chunkslice.ChunkSlice;
 import voxel.landscape.chunkbuild.blockfacefind.floodfill.chunkslice.ChunkSliceBag;
 import voxel.landscape.chunkbuild.bounds.XZBounds;
@@ -39,16 +40,25 @@ public class FloodFill4D implements Runnable
     // TODO: plan exactly what such a class should need to do: maintain current bounds, what about coords that recently went from in to out of bounds?
     // TODO: maybe first list classes that would be clients
 
-    private ChunkSliceBag inBoundsBag;
-    private ChunkSliceBag outOfBoundsBag;
-    private AtomicBoolean shouldStop;
-    private TerrainMap map;
+    private final ChunkSliceBag inBoundsBag;
+    private final ChunkSliceBag outOfBoundsBag;
+    private final AtomicBoolean shouldStop;
+    private final TerrainMap map;
     public static final int UntouchedType = BlockType.NON_EXISTENT.ordinal();
-    private FloodFill floodFill;
+    private final FloodFill floodFill;
+	private final FloodFillBoss floodFillBoss;
     private static int instanceCount = 0;
 
-    public FloodFill4D(TerrainMap _map, Camera _camera, BlockingQueue<Coord3> _chunkCoordsToBeFlooded, BlockingQueue<Coord3> _floodFilledChunkCoords, AtomicBoolean _shouldStop, XZBounds _xzBounds) {
+    public FloodFill4D(
+    		TerrainMap _map, 
+    		FloodFillBoss floodFillBoss,
+    		Camera _camera, 
+    		BlockingQueue<Coord3> _chunkCoordsToBeFlooded, 
+    		BlockingQueue<Coord3> _floodFilledChunkCoords, 
+    		AtomicBoolean _shouldStop, 
+    		XZBounds _xzBounds) {
         map = _map;
+        this.floodFillBoss = floodFillBoss;
         camera = _camera;
         chunkCoordsToBeFlooded = _chunkCoordsToBeFlooded;
         floodFilledChunkCoords = _floodFilledChunkCoords;
@@ -119,16 +129,16 @@ public class FloodFill4D implements Runnable
         }
     }
     
-    private synchronized void putDirtyChunks() { //stab in the dark : 'synchronized'
-        if (floodFill.dirtyChunks.size() == 0) return;
-		Coord3[] dirtyChunks = floodFill.dirtyChunks.toArray(new Coord3[floodFill.dirtyChunks.size()]);
-        for(Coord3 dirty : dirtyChunks) {
-        	if (!floodFilledChunkCoords.contains(dirty)) {
-	            try { floodFilledChunkCoords.put(dirty); } catch (InterruptedException e) { e.printStackTrace(); }
-        	}
-            floodFill.dirtyChunks.remove(dirty);
-        }
-    }
+//    private synchronized void putDirtyChunks() { //stab in the dark : 'synchronized'
+//        if (floodFill.dirtyChunks.size() == 0) return;
+//		Coord3[] dirtyChunks = floodFill.dirtyChunks.toArray(new Coord3[floodFill.dirtyChunks.size()]);
+//        for(Coord3 dirty : dirtyChunks) {
+//        	if (!floodFilledChunkCoords.contains(dirty)) {
+//	            try { floodFilledChunkCoords.put(dirty); } catch (InterruptedException e) { e.printStackTrace(); }
+//        	}
+//            floodFill.dirtyChunks.remove(dirty);
+//        }
+//    }
 
     private void flood(Coord3 initialSeed) {
         Coord3 initialChunkCoord = Chunk.ToChunkPosition(initialSeed);
@@ -140,7 +150,7 @@ public class FloodFill4D implements Runnable
         initializeChunkShell(seedChunkShell, initialSeed);
 
         floodFill.floodChunk(seedChunkShell, initialSeed);
-        putDirtyChunks();
+        floodFillBoss.putDirtyChunks(floodFill.dirtyChunks);
 
         /* add chunk slices to one or the other bounds bag from chunkShell after flood filling the initial seed */
         for(int i = 0; i <= Direction.ZPOS; ++i) {
@@ -194,7 +204,7 @@ public class FloodFill4D implements Runnable
                 }
             }
 
-            putDirtyChunks();
+            floodFillBoss.putDirtyChunks(floodFill.dirtyChunks);
         }
     }
 
