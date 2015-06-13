@@ -192,7 +192,7 @@ public class WorldGenerator {
 								if (chunk.blockFaceMapReady()) {
 									if (!chunk.testBool) {
 										chunk.testBool = true;
-//										buildThisChunk(chunk);
+										buildThisChunk(chunk);
 									}
 //									if (!chunk.getHasEverStartedMeshing()){										
 //										buildThisChunk(chunk);
@@ -265,7 +265,7 @@ public class WorldGenerator {
 			chunk.getChunkBrain().SetDirty();
 			chunk.getChunkBrain().wakeUp();
 			attachMeshToScene(chunk); // NOTE: attaching empty mesh, no mesh geometry yet
-			addTestDupes(chunk.position);
+//			addTestDupes(chunk.position);
 		} else {
 			chunk.getChunkBrain().setMeshEmpty();
 		}
@@ -350,7 +350,7 @@ public class WorldGenerator {
 			if (!unloadChunks.contains(chunk.position) && !chunk.hasStartedWriting.get()) {
 				if (unloadChunks.remainingCapacity() > 0) {
 					chunk.hasStartedWriting.set(true);
-					chunk.getChunkBrain().detachNodeFromParent();
+//					chunk.getChunkBrain().detachNodeFromParent();
 					unloadChunks.add(chunk.position);
 				} else {
 					B.bugln("unloadChunks capacity 0");
