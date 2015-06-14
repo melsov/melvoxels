@@ -190,10 +190,18 @@ public class WorldGenerator {
 						else {
 							if (!chunk.hasNoBlocks()) {
 								if (chunk.blockFaceMapReady()) {
-									if (!chunk.testBool) {
-										chunk.testBool = true;
-										buildThisChunk(chunk);
+									//IT CAN AND DOES HAPPEN THAT CHUNKS GET OUT OF ADD AREA BY THE TIME THE ARE IN 'RENDER CHUNKS'
+									//This is as it should be, and yet: (1) if chunks were only slated for unload if outside of prepare area
+									//we'd avoid some re-processing 'naturally'. (2) Moreover, we need a way of (actually) knowing a chunk's
+									//build status. (2.5) Give chunks a "standby chunkMeshBuildingSet" which will be nulled if any block changes
+									// and when the chunkMeshBuildingSet is applied? (seems dicey? inviting concurrency bugs?)
+									if (chunk.meshShouldUpdateOrHasAlready()) {
+										meshThisChunk(chunk);
 									}
+//									if (!chunk.testBool) {
+//										chunk.testBool = true;
+//										meshThisChunk(chunk);
+//									}
 //									if (!chunk.getHasEverStartedMeshing()){										
 //										buildThisChunk(chunk);
 //									}
@@ -247,7 +255,7 @@ public class WorldGenerator {
 			}
 			Asserter.assertTrue(map.getChunk(chunkCoord) != null,
 					"chunk not in map! at chunk coord: " + chunkCoord.toString());
-			buildThisChunk(map.getChunk(chunkCoord));
+			meshThisChunk(map.getChunk(chunkCoord));
 		}
 	}
 
@@ -256,7 +264,7 @@ public class WorldGenerator {
 	 * makes a chunkMeshBuildingSet for the chunk
 	 * and adds that chunkMeshBuildingSet to 'chunksToBeMeshed'
 	 * CONSIDER: simplify this process? (last step is the only essential part at this point) */
-	private void buildThisChunk(Chunk chunk) {
+	private void meshThisChunk(Chunk chunk) {
 //		if (chunk.getHasEverStartedMeshing()) {
 //			DebugGeometry.AddSolidChunk(chunk.position, ColorRGBA.Red);
 //		}
@@ -302,7 +310,9 @@ public class WorldGenerator {
 					// THIS HAPPENS: TODO: HOW TO REACT? (AND HOW DOES IT HAPPEN: ASYNCHRONOUS UNINTENDEDNESS)
 //					DebugGeometry.AddSolidChunk(chunk.position, ColorRGBA.Brown);
 				} 
+				chunk.buildLog("chunk not w/in add area");
 				
+				chunk.setStatusMeshNeedsUpdate();
 				slateForUnload(map.getChunk(chunkMeshBuildingSet.chunkPosition));
 				continue;
 			}

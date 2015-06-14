@@ -195,5 +195,26 @@ public class FileUtil {
     private static FileOutputStream serializeChunkFile(Coord3 position, String objectExtension) throws FileNotFoundException {
         return new FileOutputStream(ChunkFile(position, objectExtension, true));
     }
+    
+    public static boolean DeleteCurrentWorldDirectory() {
+    	return deleteDirectory(new File(WorldDirectory()) );
+    }
+    
+    private static boolean deleteDirectory(File directory) {
+        if(directory.exists()){
+            File[] files = directory.listFiles();
+            if(null!=files){
+                for(int i=0; i<files.length; i++) {
+                    if(files[i].isDirectory()) {
+                        deleteDirectory(files[i]);
+                    }
+                    else {
+                        files[i].delete();
+                    }
+                }
+            }
+        }
+        return(directory.delete());
+    }
 
 }

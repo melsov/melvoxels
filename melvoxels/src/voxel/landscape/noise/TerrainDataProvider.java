@@ -70,16 +70,18 @@ public class TerrainDataProvider {
         if (USE_TEST_NOISE) {
 //        return enclosuresBorder(xin, yin, zin);
 //        return flat(yin);
-//            return borderBoxMaker.coneCave(xin, yin, zin);
+        	int b;
+            if (true) b = borderBoxMaker.coneCave(xin, yin, zin);
 //            return borderBoxMaker.columns(xin, yin, zin);
 //            return borderBoxMaker.conescape(xin, yin, zin);
 
-            if (true) return borderBoxMaker.fakeTallCaveWithBoxAndAdjacentEnclosure(xin, yin, zin);
+//            if (true) return borderBoxMaker.fakeTallCaveWithBoxAndAdjacentEnclosure(xin, yin, zin);
 //        return fakeCaveWithBox(xin, yin, zin);
 //        return testNoise(xin, yin, zin);
 //        if (fakeCave(xin, yin, zin)) return BlockType.LANTERN.ordinal();
 
-            int b = borderBoxMaker.shapeMix(xin, yin, zin);
+            else b = borderBoxMaker.shapeMix(xin, yin, zin);
+            
             if (BLOCKTYPE_PER_CHUNK) {
                 return b==BlockType.AIR.ordinal() ? BlockType.AIR.ordinal() : blockTypePerChunk(xin, yin, zin);
             }

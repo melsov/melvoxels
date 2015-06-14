@@ -27,6 +27,7 @@ import com.jme3.texture.plugins.AWTLoader;
 import com.jme3.ui.Picture;
 import com.jme3.util.BufferUtils;
 import com.jme3.util.SkyFactory;
+
 import voxel.landscape.chunkbuild.MaterialLibrarian;
 import voxel.landscape.collection.ColumnMap;
 import voxel.landscape.coord.Axis;
@@ -38,6 +39,7 @@ import voxel.landscape.debug.debugmesh.DebugChart;
 import voxel.landscape.debug.debugmesh.DebugChart.DebugShapeType;
 import voxel.landscape.debug.debugmesh.IDebugGet3D;
 import voxel.landscape.debug.debugutil.GUIInfo;
+import voxel.landscape.fileutil.FileUtil;
 import voxel.landscape.jmonrenderutil.WireProcessor;
 import voxel.landscape.map.TerrainMap;
 import voxel.landscape.player.Audio;
@@ -60,7 +62,7 @@ public class VoxelLandscape extends SimpleApplication
 			DEBUG_INFO_ON = false, 
 			ADD_CHUNKS_DYNAMICALLY = true, 
 			COMPILE_CHUNK_DATA_ASYNC = true,
-            CULLING_ON = false, 
+            CULLING_ON = true, 
             BUILD_INITIAL_CHUNKS = false, 
             DONT_BUILD_CHUNK_MESHES = false, 
             SHOW_COLUMN_DEBUG_QUADS = false, 
@@ -69,7 +71,8 @@ public class VoxelLandscape extends SimpleApplication
             BUILD_STRUCTURES = false, 
             DO_USE_TEST_GEOMETRY = false, 
             SHOULD_BUILD_CHUNK_MESH_ASYNC = true, 
-            READ_CHUNKS_FROM_FILE = false;
+            READ_CHUNKS_FROM_FILE = true,
+            DEBUG_DELETE_CURRENT_WORLD_DIR_ON_STARTUP = false;
 
     private WorldGenerator worldGenerator;
 	private TerrainMap terrainMap;
@@ -157,6 +160,7 @@ public class VoxelLandscape extends SimpleApplication
 	 * Program starts here... ******
      *******************************/
     public static void main(String[] args) {
+    	if (DEBUG_DELETE_CURRENT_WORLD_DIR_ON_STARTUP) FileUtil.DeleteCurrentWorldDirectory();
         VoxelLandscape app = new VoxelLandscape();
         ScreenSettings(app, FULL_SCREEN); //<--- call new method here
         app.start(); // start the game

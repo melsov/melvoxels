@@ -9,9 +9,12 @@ import voxel.landscape.coord.Coord2;
 import voxel.landscape.coord.Coord3;
 import voxel.landscape.coord.Direction;
 import voxel.landscape.map.structure.structures.surface.Pyramid;
+import voxel.landscape.settings.BuildSettings;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.jme3.math.Vector3f;
 
 /**
  * Created by didyouloseyourdog on 12/23/14.
@@ -148,7 +151,8 @@ public class BorderBoxMaker {
     }
     private Cone getTheCone() {
         if (theCone == null) {
-            theCone = new ToothyCone(new Box(new Coord3(15, 8, 15), new Coord3(18,18,18)));
+        	Coord3 start = Chunk.ToWorldPosition(new Coord3(1, 0, BuildSettings.ADD_COLUMN_RADIUS)).add(new Coord3(0, 5, -20));
+            theCone = new Cone(new Box(start, new Coord3(28,28,28)));
         }
         return theCone;
     }
@@ -256,6 +260,9 @@ public class BorderBoxMaker {
         if (getTheCone().isOnBorder(new Coord3(x,y,z))) {
 
             return BlockType.DIRT.ordinal();
+        }
+        if (!BuildSettings.ChunkCoordWithinAddArea(new Vector3f(0,0,0), Chunk.ToChunkPosition(x,y,z))){
+        	return BlockType.DIRT.ordinal();
         }
         return BlockType.AIR.ordinal();
     }

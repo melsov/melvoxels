@@ -191,6 +191,7 @@ public class ChunkBrain extends AbstractControl implements Cloneable, Savable, T
 
     private void applyMeshSet(MeshSet meshSet) {
         Mesh mesh = meshSet.isLiquidMaterial ? getWaterMesh() : getMesh();
+        chunk.buildLog(String.format("apply mesh set. vertices size: %d", meshSet.vertices.size()));
         ChunkBuilder.ApplyMeshSet(meshSet, mesh, meshSet.isOnlyLightUpdate);
         Geometry geom = meshSet.isLiquidMaterial ? getWaterGeometry() : getGeometry();
         if (geom == null) {
@@ -235,6 +236,7 @@ public class ChunkBrain extends AbstractControl implements Cloneable, Savable, T
         chunkMeshBuildingSet.isOnlyLiquid = onlyLiquid;
         chunkMeshBuildingSet.isOnlyLight = onlyLight;
         chunkMeshBuildingSet.chunkPosition = chunk.position;
+        chunk.buildLog("enqueue mesh set");
         chunk.getTerrainMap().getApp().getWorldGenerator().enqueueChunkMeshSets(chunkMeshBuildingSet);
     }
 

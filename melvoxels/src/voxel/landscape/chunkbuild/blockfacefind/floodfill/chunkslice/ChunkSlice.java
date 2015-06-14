@@ -29,7 +29,6 @@ public class ChunkSlice
         chunkCoord = Chunk.ToChunkPosition(global); direction = _direction;
         planePositionGlobal = global.componentForDirection(direction);
         this.global = global;
-        
     }
     
     public void addCoord(Coord3 global){

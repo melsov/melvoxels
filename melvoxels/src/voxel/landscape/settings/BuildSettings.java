@@ -13,8 +13,8 @@ public class BuildSettings {
     public static int PREPARE_COLUMN_RADIUS = ADD_COLUMN_RADIUS + 3;
     public static int STORE_COLUMN_RADIUS = PREPARE_COLUMN_RADIUS + 2;
 
-    private static Box2 AddBox = new Box2(new Coord2(-ADD_COLUMN_RADIUS), new Coord2(ADD_COLUMN_RADIUS * 2));
-    private static Box2 PrepareBox = new Box2(new Coord2(-PREPARE_COLUMN_RADIUS), new Coord2(PREPARE_COLUMN_RADIUS * 2));
+    public static final Box2 AddBox = new Box2(new Coord2(-ADD_COLUMN_RADIUS), new Coord2(ADD_COLUMN_RADIUS * 2));
+    public static final Box2 PrepareBox = new Box2(new Coord2(-PREPARE_COLUMN_RADIUS), new Coord2(PREPARE_COLUMN_RADIUS * 2));
 
     public static boolean ChunkCoordWithinPrepareArea(Vector3f camera, Coord3 chunkCoord) {
         return ChunkCoordWithinBox(camera, chunkCoord, PrepareBox);

@@ -196,6 +196,8 @@ public class ChunkBlockFaceMap implements Serializable {
             }
         }
         meshDirty = false;
+        chunk.buildLog(String.format("built mesh from map. There were %d iterations", triIndex/4));
+        
     }
 
     /*

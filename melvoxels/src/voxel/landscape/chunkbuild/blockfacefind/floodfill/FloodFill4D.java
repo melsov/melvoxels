@@ -88,7 +88,7 @@ public class FloodFill4D implements Runnable
     }
 
     public static final boolean DONT_ACTUALLY_FLOOD_FILL = false;
-    public void startFlood(Coord3 chunkCoord) {
+    private void startFlood(Coord3 chunkCoord) {
         // * SHORT CIRCUIT THE WHOLE FLOOD FILL (for testing) *
         if (DONT_ACTUALLY_FLOOD_FILL || WorldGenerator.TEST_DONT_BUILD) {
         	try {
