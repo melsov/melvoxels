@@ -4,13 +4,16 @@ import com.jme3.scene.Node;
 
 import voxel.landscape.chunkbuild.ChunkBrain;
 import voxel.landscape.chunkbuild.ChunkBuildStatus;
+import voxel.landscape.chunkbuild.blockfacefind.ChunkLocalCoord;
 import voxel.landscape.chunkbuild.blockfacefind.floodfill.chunkseeds.ChunkFloodFillSeedSet;
 import voxel.landscape.collection.LocalBlockMap;
 import voxel.landscape.collection.chunkface.ChunkBlockFaceMap;
 import voxel.landscape.collection.coordmap.managepages.ConcurrentHashMapCoord3D;
+import voxel.landscape.coord.Axis;
 import voxel.landscape.coord.Box;
 import voxel.landscape.coord.Coord2;
 import voxel.landscape.coord.Coord3;
+import voxel.landscape.coord.Direction;
 import voxel.landscape.fileutil.FileUtil;
 import voxel.landscape.map.TerrainMap;
 
@@ -58,33 +61,40 @@ public class Chunk {
 	private ChunkBrain chunkBrain;
 	private TerrainMap terrainMap;
 
-	public ChunkBlockFaceMap chunkBlockFaceMap = new ChunkBlockFaceMap();
+	public final ChunkBlockFaceMap chunkBlockFaceMap = new ChunkBlockFaceMap();
 	public ChunkFloodFillSeedSet chunkFloodFillSeedSet;
 
 	private ChunkBuildStatus chunkBuildStatus = ChunkBuildStatus.NOT_TOUCHED;
+
 	public synchronized void setStatusMeshNeedsUpdate() {
 		chunkBuildStatus = ChunkBuildStatus.MESH_NEEDS_UPDATE;
 	}
+
 	public synchronized void setMeshUpToDate() {
 		chunkBuildStatus = ChunkBuildStatus.MESH_UPDATED;
 	}
+
 	public synchronized void setMeshWillUpdate() {
 		chunkBuildStatus = ChunkBuildStatus.MESH_WILL_UPDATE;
 	}
+
 	public boolean meshNeedsUpdate() {
 		return chunkBuildStatus.meshNeedsUpdate();
 	}
-	public synchronized boolean meshShouldUpdateOrHasAlready() {
-		if (chunkBuildStatus.meshNeedsUpdate() && !chunkBuildStatus.meshWillUpdate()) {
+
+	public synchronized boolean setMeshShouldUpdate() {
+		if (chunkBuildStatus.meshNeedsUpdate()
+				&& !chunkBuildStatus.meshWillUpdate()) {
 			setMeshWillUpdate();
 			return true;
 		}
 		return false;
 	}
+
 	public boolean meshWillUpdate() {
 		return chunkBuildStatus.meshWillUpdate();
 	}
-	
+
 	// CONSIDER: decide whether we can just use hasNoBlocks and get rid of
 	// isAllAir
 	private volatile boolean isAllAir = false;
@@ -128,8 +138,8 @@ public class Chunk {
 	}
 
 	public boolean isWriteDirty() {
-		return blocks.writeDirty.get() || chunkBlockFaceMap.writeDirty.get()
-				|| chunkFloodFillSeedSet.writeDirty.get();
+		return VoxelLandscape.WRITE_CHUNKS_TO_FILE
+				&& (blocks.writeDirty.get() || chunkBlockFaceMap.writeDirty() || chunkFloodFillSeedSet.writeDirty.get());
 	}
 
 	private final Lock lock = new ReentrantLock(true);
@@ -149,7 +159,6 @@ public class Chunk {
 	 */
 	public void readFromFile() {
 		if (!VoxelLandscape.READ_CHUNKS_FROM_FILE) {
-			bug("got here");
 			return;
 		}
 		lock.lock();
@@ -162,19 +171,19 @@ public class Chunk {
 							FileUtil.HasAddedStructuresExtension);
 			hasAddedStructures = hasAddedStructureO != null ? hasAddedStructureO
 					: hasAddedStructures;
+			buildLog("read from file");
 		} finally {
 			lock.unlock();
 		}
 	}
 
-	public static final boolean WRITE_TO_FILE = true;
-
 	public void writeToFile() {
-		if (!WRITE_TO_FILE)
+		if (!VoxelLandscape.WRITE_CHUNKS_TO_FILE) {
 			return;
+		}
 		lock.lock();
 		try {
-			if (blocks.writeDirty.get()) { // NOTE: duck-taped condition //TODO:
+			if (blocks.writeDirty.get()) { // NOTE: duck-tape condition TODO:
 											// consider serializing the whole
 											// chunk instead?
 				try {
@@ -187,12 +196,13 @@ public class Chunk {
 			if (blocks.writeDirty.get()) {
 				blocks.writeToFile(position);
 			}
-			if (chunkBlockFaceMap.writeDirty.get()) {
+			if (chunkBlockFaceMap.writeDirty()) {
 				chunkBlockFaceMap.writeToFile(position);
 			}
 			if (chunkFloodFillSeedSet.writeDirty.get()) {
 				chunkFloodFillSeedSet.writeToFile(position);
 			}
+			buildLog("wrote to file");
 
 		} finally {
 			hasStartedWriting.set(false);
@@ -296,6 +306,14 @@ public class Chunk {
 		return new Coord3(worldX, worldY, worldZ);
 	}
 
+	public static boolean IsOutsideFacing(ChunkLocalCoord local, int direction) {
+		if (Direction.IsNegDir(direction)) {
+			return Direction.ComponentForDirection(local.toCoord3(), direction) == 0;
+		}
+		return Direction.ComponentForDirection(local.toCoord3(), direction) == Direction
+				.ComponentForDirection(Chunk.CHUNKDIMS, direction) - 1;
+	}
+
 	public static Box ChunkLocalBox = new Box(new Coord3(0), new Coord3(
 			XLENGTH, YLENGTH, ZLENGTH));
 
@@ -308,11 +326,24 @@ public class Chunk {
 	}
 
 	public int blockAt(int x, int y, int z) {
-		return blocks.SafeGet(x, y, z);
+		lock.lock();
+		int result;
+		try {
+			result = blocks.SafeGet(x, y, z);
+		} finally {
+			lock.unlock();
+		}
+		return result;
+		// return blocks.SafeGet(x, y, z);
 	}
 
 	public void setBlockAt(int block, Coord3 co) {
-		blocks.Set(block, co); 
+		lock.lock();
+		try {
+			blocks.Set(block, co);
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	public void setBlockAt(int block, int x, int y, int z) {
@@ -341,7 +372,11 @@ public class Chunk {
 		return sb.toString();
 	}
 
-	private StringBuilder buildLog = new StringBuilder(50);
+	private final StringBuilder buildLog = new StringBuilder(50);
+
+	public StringBuilder getBuildLog() {
+		return buildLog;
+	}
 
 	public void buildLog(String s) {
 		buildLog.append(String.format("%s \n", s));

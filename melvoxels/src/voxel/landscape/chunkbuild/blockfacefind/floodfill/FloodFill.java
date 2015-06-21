@@ -86,6 +86,9 @@ public class FloodFill
         );
         return debugBox.contains(co);
     }
+    /*
+     * NOTES: poss issue with xpos & xneg & z (pos and neg?) (seen ONLY with culling on: faces at the edge of chunks don't render--consistently)
+     */
 
     /**
      * Finds transparent blocks (mostly air) below the surface in a given chunk, starting at a given seed coord
@@ -122,7 +125,6 @@ public class FloodFill
         getCurrentWasIsWithinChunk(initialSeedGlobal, seedChunk, thisCoordWasIs, untouchedType);
 
         if (map.isAboveSurface(initialSeedGlobal)) {
-        	DebugGeometry.AddDebugBlock(initialSeedGlobal, ColorRGBA.Cyan);
             return;
         }
         if (BlockType.IsFloodFilledAir(thisCoordWasIs[0])) {
@@ -357,7 +359,12 @@ public class FloodFill
     // add a face to a block in direction. Use seedChunk if it contains the block coord to cut down on looks up in map
     private void addFaceForType(Chunk seedChunk, Box chunkBounds, Coord3 globalBlockLocation, int direction, int blockType) {
         Coord3 updatedChunkCoord = map.setBlockFaceForChunkIfType(seedChunk, chunkBounds, globalBlockLocation, direction, blockType);
-        if (updatedChunkCoord != null) { dirtyChunks.add(updatedChunkCoord); }
+        if (updatedChunkCoord != null) {
+        	if (!dirtyChunks.contains(updatedChunkCoord)) map.getChunk(updatedChunkCoord).buildLog("place in dirty chunks"); //DEBUG
+
+        	dirtyChunks.add(updatedChunkCoord); 
+    	}
+        Asserter.assertTrue(map.getChunk(seedChunk.position) == seedChunk, "dude");
     }
     private void getCurrentWasIsWithinChunk(Coord3 global, Chunk chunk, int[] wasIs, int untouchedType) {
         wasIs[0] = chunk.blockAt(Chunk.ToChunkLocalCoord(global));

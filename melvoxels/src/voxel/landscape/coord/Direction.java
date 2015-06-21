@@ -128,6 +128,9 @@ public class Direction {
         }
         return Axis.Z;
     }
+    public static int ComponentForDirection(Coord3 c, int dir) {
+    	return Axis.ComponentForAxis(c, AxisForDirection(dir));
+    }
 
     public static int[] BitMasks = new int[]{
             1 << XNEG,

@@ -151,6 +151,10 @@ public class WorldGenerator {
 			scatterBuildPool.execute(asyncScatter);
 		}
 	}
+	
+	// OUTLINE: GENERATED AND WRITTEN CHUNK ENVELOPE
+	// 1) gen all chunk columns in prepare area and write them (player is 'frozen' in some way until done)
+	// 2) 
 
 	// TODO: new remove and add policy: do complete add/write-purge in every
 	// frame
@@ -185,7 +189,8 @@ public class WorldGenerator {
 						if (chunk == null) continue;
 						if (chunk.canUnhide()) {
 							DebugGeometry.AddChunk(chunk.position, ColorRGBA.Magenta);
-							attachMeshToScene(chunk);
+							chunk.buildLog("can unhide");
+							attachMeshToScene(chunk); // want sort of
 						}
 						else {
 							if (!chunk.hasNoBlocks()) {
@@ -195,9 +200,14 @@ public class WorldGenerator {
 									//we'd avoid some re-processing 'naturally'. (2) Moreover, we need a way of (actually) knowing a chunk's
 									//build status. (2.5) Give chunks a "standby chunkMeshBuildingSet" which will be nulled if any block changes
 									// and when the chunkMeshBuildingSet is applied? (seems dicey? inviting concurrency bugs?)
-									if (chunk.meshShouldUpdateOrHasAlready()) {
+									if (chunk.setMeshShouldUpdate()) {
 										meshThisChunk(chunk);
 									}
+									/*
+									 * YET MORE NOTES: it seems irrational? that we meshThisChunk when it's blockface map is ready 
+									 * (TODO: remember why we do this). Will we sometimes encounter chunks that are not BFM ready and 
+									 * should be meshed?
+									 */
 //									if (!chunk.testBool) {
 //										chunk.testBool = true;
 //										meshThisChunk(chunk);
@@ -258,6 +268,15 @@ public class WorldGenerator {
 			meshThisChunk(map.getChunk(chunkCoord));
 		}
 	}
+	
+	public void debugForceMeshThisChunk(Coord3 chunkCo) {
+		Chunk chunk = map.getChunk(chunkCo);
+		if (chunk == null) {
+			bug("wha? chunk null?");
+			return;
+		}
+		meshThisChunk(chunk);
+	}
 
 	/* what this really does:
 	 * makes and attaches an empty mesh for the chunk
@@ -300,6 +319,8 @@ public class WorldGenerator {
 			Chunk chunk = map.getChunk(chunkMeshBuildingSet.chunkPosition);
 			if (chunk == null) {
 				B.bugln("null chunk: render chunks");
+				Chunk nully = map.lookupOrCreateChunkAtPosition(chunkMeshBuildingSet.chunkPosition);
+				bug(nully.toString());
 				DebugGeometry.AddChunk(chunkMeshBuildingSet.chunkPosition, ColorRGBA.Magenta);
 				continue;
 			}
@@ -338,7 +359,7 @@ public class WorldGenerator {
 		if (!VoxelLandscape.CULLING_ON)
 			return;
 		for (Coord3 chunkCoord : furthestChunkFinder.outsideOfAddRangeChunks(map, camera, columnMap)) {
-			if (!BuildSettings.ChunkCoordWithinAddArea(camera.getLocation(), chunkCoord)) {
+			if (!BuildSettings.ChunkCoordWithinPrepareArea(camera.getLocation(), chunkCoord)) {
 				slateForUnload(map.getChunk(chunkCoord));
 			}
 		}
@@ -350,17 +371,13 @@ public class WorldGenerator {
 		if (chunk == null) {
 			return;
 		}
-		if (!columnMap.IsBuilt(chunk.position.x, chunk.position.z)) {
-			// B.bugln("col not built: " + chunk.position.toString());
-		}
-		if (!chunk.isWriteDirty()) {
-			// DebugGeometry.AddAddChunk(chunk.position);
-		}
+
 		if (chunk.isWriteDirty()) {
 			if (!unloadChunks.contains(chunk.position) && !chunk.hasStartedWriting.get()) {
 				if (unloadChunks.remainingCapacity() > 0) {
 					chunk.hasStartedWriting.set(true);
 //					chunk.getChunkBrain().detachNodeFromParent();
+					chunk.buildLog("WRITE DIRTY: add to unloadChunks");
 					unloadChunks.add(chunk.position);
 				} else {
 					B.bugln("unloadChunks capacity 0");
@@ -369,6 +386,7 @@ public class WorldGenerator {
 		} else {
 			if (!deletableChunks.contains(chunk.position)) {
 				if (deletableChunks.remainingCapacity() > 0) {
+					chunk.buildLog("NOT WRITE DIRTY: add to deletable");
 					deletableChunks.add(chunk.position);
 				} else {
 					B.bugln("deletable capacity 0");
@@ -388,6 +406,7 @@ public class WorldGenerator {
 	private void removeChunk(Coord3 chunkCoord) {
 		if (chunkCoord == null)
 			return;
+//		if (BuildSettings.ChunkCoordWithinNonDeletableArea(camera.getLocation(), chunkCoord)) { // This helped but only somewhat...
 		if (BuildSettings.ChunkCoordWithinPrepareArea(camera.getLocation(), chunkCoord)) {
 			return;
 		}

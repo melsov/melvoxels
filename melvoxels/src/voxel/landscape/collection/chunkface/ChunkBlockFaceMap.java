@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by didyouloseyourdog on 10/2/14.
@@ -27,8 +29,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ChunkBlockFaceMap implements Serializable {
 
     private volatile ConcurrentHashMap<ChunkLocalCoord, BlockFaceRecord> faces = new ConcurrentHashMap<>(16*16*4);
-    public volatile boolean meshDirty; //True if a face has been deleted and map hasn't yet re-meshed
-    public final AtomicBoolean writeDirty = new AtomicBoolean(false);
+    public final AtomicBoolean meshDirty = new AtomicBoolean(false); //True if a face has been deleted and map hasn't yet re-meshed
+    private final AtomicBoolean writeDirty = new AtomicBoolean(false);
+    private int debugBuildCount = 0;
+    
+    private final Lock lock = new ReentrantLock(true);
+    
+    public boolean writeDirty() {
+    	return writeDirty.get();
+    }
 
     private Map<ChunkLocalCoord, BlockFaceRecord> getFaces() {
         return faces;
@@ -37,7 +46,7 @@ public class ChunkBlockFaceMap implements Serializable {
         return getFaces().isEmpty();
     }
     public boolean meshReady() {
-    	return !empty() && !meshDirty;
+    	return !empty() && !meshDirty.get();
     }
     public Iterator<Map.Entry<ChunkLocalCoord, BlockFaceRecord>> iterator() {
         return faces.entrySet().iterator();
@@ -120,25 +129,30 @@ public class ChunkBlockFaceMap implements Serializable {
         setFace(localCoord, direction, true);
     }
     private void setFace(Coord3 localCoord, int direction, boolean exists) {
-        ChunkLocalCoord bfCoord = new ChunkLocalCoord(localCoord);
-        BlockFaceRecord blockFaceRecord = getFaces().get(bfCoord);
-        if (blockFaceRecord == null) {
-            if (!exists) return;
-            blockFaceRecord = new BlockFaceRecord();
-            getFaces().put(bfCoord, blockFaceRecord);
-            writeDirty.set(true);
-            meshDirty = true;
-        }
-        if (blockFaceRecord.getFace(direction) != exists) {
-            blockFaceRecord.setFace(direction, exists);
-            writeDirty.set(true);
-            meshDirty = true;
-        }
-        if (!exists && !blockFaceRecord.hasFaces()) {
-            getFaces().remove(bfCoord);
-            writeDirty.set(true);
-            meshDirty = true;
-        }
+    	lock.lock();
+    	try {
+	        ChunkLocalCoord bfCoord = new ChunkLocalCoord(localCoord);
+	        BlockFaceRecord blockFaceRecord = getFaces().get(bfCoord);
+	        if (blockFaceRecord == null) {
+	            if (!exists) return;
+	            blockFaceRecord = new BlockFaceRecord();
+	            getFaces().put(bfCoord, blockFaceRecord);
+	            writeDirty.set(true);
+	            meshDirty.set(true);
+	        }
+	        if (blockFaceRecord.getFace(direction) != exists) {
+	            blockFaceRecord.setFace(direction, exists);
+	            writeDirty.set(true);
+	            meshDirty.set(true);
+	        }
+	        if (!exists && !blockFaceRecord.hasFaces()) {
+	            getFaces().remove(bfCoord);
+	            writeDirty.set(true);
+	            meshDirty.set(true);
+	        }
+    	} finally {
+    		lock.unlock();
+    	}
     }
     public boolean getFace(Coord3 localCoord, int direction) {
         BlockFaceRecord blockFaceRecord = getFaces().get(new ChunkLocalCoord(localCoord));
@@ -180,7 +194,10 @@ public class ChunkBlockFaceMap implements Serializable {
 
             for (int dir : Direction.Directions)
             {
-                if (faceRecord.getFace(dir)) {
+                if (faceRecord.getFace(dir) ) { // || Chunk.IsOutsideFacing(blockFaceCoord, dir)) { // paper over glitches (reloaded outside faces are sometimes lost)
+//                	if (faceRecord.hasFaces() && !faceRecord.getFace(dir) && Chunk.IsOutsideFacing(blockFaceCoord, dir)) { //DBUG
+//                		blockType = BlockType.LANTERN.ordinal(); //DBUG
+//                	}
                     if (BlockType.IsWaterType(blockType)) {
                         if (!lightOnly)
                             BlockMeshUtil.AddFaceMeshData(blockFaceCoord.toCoord3(), waterMSet, blockType, dir, waterTriIndex, map);
@@ -195,32 +212,41 @@ public class ChunkBlockFaceMap implements Serializable {
                 }
             }
         }
-        meshDirty = false;
-        chunk.buildLog(String.format("built mesh from map. There were %d iterations", triIndex/4));
-        
+        meshDirty.set(false);
+        chunk.buildLog(String.format("built mesh from map. build no. %d. There were %d iterations", debugBuildCount++, triIndex/4));
     }
 
     /*
      * Read/Write
      */
     public void readFromFile(Coord3 position) {
-        Object facesO = FileUtil.DeserializeChunkObject(position, FileUtil.ChunkBlockFaceMapExtension);
-        if (facesO != null) {
-            faces = (ConcurrentHashMap<ChunkLocalCoord, BlockFaceRecord>) facesO;
-            writeDirty.set(false);
-            meshDirty = true;
-        }
+    	lock.lock();
+    	try {
+	        Object facesO = FileUtil.DeserializeChunkObject(position, FileUtil.ChunkBlockFaceMapExtension);
+	        if (facesO != null) {
+	            faces = (ConcurrentHashMap<ChunkLocalCoord, BlockFaceRecord>) facesO;
+	            writeDirty.set(false);
+	            meshDirty.set(true);;
+	        }
+    	} finally {
+    		lock.unlock();
+    	}
     }
 
     public void writeToFile(Coord3 position) {
-    	if (!writeDirty.get()) return;
-        try {
-            FileUtil.SerializeChunkObject(faces, position, FileUtil.ChunkBlockFaceMapExtension);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        writeDirty.set(false);
+    	lock.lock();
+    	try {
+	    	if (!writeDirty.get()) return;
+	        try {
+	            FileUtil.SerializeChunkObject(faces, position, FileUtil.ChunkBlockFaceMapExtension);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return;
+	        }
+	        writeDirty.set(false);
+    	} finally {
+    		lock.unlock();
+    	}
     }
 
 }

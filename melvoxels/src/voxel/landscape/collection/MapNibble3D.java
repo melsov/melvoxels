@@ -52,14 +52,14 @@ public class MapNibble3D
         return chunks.GetInstance(pos);
     }
     public ChunkNibble3D GetChunkInstance(int x, int y, int z) {
-        return chunks.GetInstance(x, y, z);
+        return GetChunkInstance(new Coord3(x, y, z));
     }
 
     public ChunkNibble3D GetChunk(Coord3 pos) {
-        return chunks.SafeGet(pos);
+        return chunks.Get(pos);
     }
     public ChunkNibble3D GetChunk(int x, int y, int z) {
-        return chunks.SafeGet(x, y, z);
+        return chunks.Get(x, y, z);
     }
 
 }

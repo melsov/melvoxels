@@ -41,6 +41,14 @@ public class Axis
     public static int NextAxis(int axis) {
         return (Math.min(Math.max(0, axis), 2) + 1) % 3;
     }
+    
+    public static int ComponentForAxis(Coord3 c, int axis) {
+    	switch(axis) {
+	    	case X: return c.x;
+	    	case Y: return c.y;
+	    	default: return c.z;
+    	}
+    }
 
 	 
 }

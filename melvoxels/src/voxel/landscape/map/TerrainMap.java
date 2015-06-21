@@ -21,13 +21,17 @@ import voxel.landscape.util.Asserter;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.jme3.math.ColorRGBA;
+
 import static voxel.landscape.BlockType.*;
+import static voxel.landscape.player.B.*;
 
 public class TerrainMap implements IBlockDataProvider
 {
@@ -53,6 +57,8 @@ public class TerrainMap implements IBlockDataProvider
 
     public final BlockingQueue<Coord3> chunkCoordsToBeFlooded = new ArrayBlockingQueue<Coord3>(128);
     public final BlockingQueue<Coord3> chunkCoordsToBePriorityFlooded = new ArrayBlockingQueue<Coord3>(128);
+    
+    private final HashMap<Coord3, String> debugBuildLogArchive = new HashMap<>(40);
     
     private final Lock lock = new ReentrantLock(true);
 
@@ -93,14 +99,8 @@ public class TerrainMap implements IBlockDataProvider
 
     public void setBlockFace(Coord3 worldCoord, int direction, boolean shouldExist) {
         Coord3 chunkCo = Chunk.ToChunkPosition(worldCoord);
-//        Coord3 localCo = Chunk.ToChunkLocalCoord(worldCoord);
         Chunk chunk = lookupOrCreateChunkAtPosition(chunkCo);
         setBlockFaceForChunk(chunk, worldCoord, direction, shouldExist);
-//        if (shouldExist) {
-//            chunk.chunkBlockFaceMap.addFace(localCo, direction);
-//        } else {
-//            chunk.chunkBlockFaceMap.removeFace(localCo, direction);
-//        }
     }
     public void setBlockFaceForChunk(Chunk chunk, Coord3 worldCoord, int direction, boolean shouldExist) {
         if (shouldExist) {
@@ -232,15 +232,23 @@ public class TerrainMap implements IBlockDataProvider
             return;
         }
         if (ch.isWriteDirty()) {
-            return;
+        	return;
         }
-        chunks.Remove(chunkPos);
-        sunLightmap.RemoveLightData(chunkPos);
-        lightmap.RemoveLightData(chunkPos);
-        // TODO: remove water data
-        ch.getChunkBrain().clearMeshBuffers();
-        ch.getChunkBrain().detachNodeFromParent();
-        ch.getChunkBrain().setSpatialNull();
+        lock.lock();
+        try {
+	        chunks.Remove(chunkPos);
+	        sunLightmap.RemoveLightData(chunkPos);
+	        lightmap.RemoveLightData(chunkPos);
+	        // TODO: remove water data
+	        ch.getChunkBrain().clearMeshBuffers();
+	        ch.getChunkBrain().detachNodeFromParent();
+	        ch.getChunkBrain().setSpatialNull();
+	        
+	        ch.buildLog("REMOVED");
+	        debugBuildLogArchive.put(chunkPos, ch.getBuildLog().toString());
+        } finally {
+        	lock.unlock();
+        }
     }
 
     public boolean columnHasHiddenChunk(ICoordXZ look) {
@@ -571,9 +579,11 @@ public class TerrainMap implements IBlockDataProvider
             return;
         }
 
+        Coord3 chunkCoord;
+        Chunk chunk;
         for(neighbor.y = height + 1; neighbor.y <= neighborHeight; ++neighbor.y ) {
-            Coord3 chunkCoord = Chunk.ToChunkPosition(neighbor);
-            Chunk chunk = lookupOrCreateChunkAtPosition(chunkCoord);
+            chunkCoord = Chunk.ToChunkPosition(neighbor);
+            chunk = lookupOrCreateChunkAtPosition(chunkCoord);
 
             int was = chunk.blockAt(Chunk.ToChunkLocalCoord(neighbor));
             int is = was;
@@ -710,6 +720,11 @@ public class TerrainMap implements IBlockDataProvider
 		Coord3 localPos = Chunk.ToChunkLocalCoord(global);
 
         Chunk chunk = getChunk(chunkPos);
+        //DBUG
+        if (chunk == null) {
+        	Chunk nully = lookupOrCreateChunkAtPosition(chunkPos);
+        	bugln("Null chunk in set and recompute: \n" + nully.toString());
+        }
         int wasType = chunk.blockAt(localPos);
         if (wasType == block) return;
 
@@ -769,6 +784,7 @@ public class TerrainMap implements IBlockDataProvider
 		Chunk chunk = getChunk(chunkPos);
 		if (chunk != null) {
             chunk.getChunkBrain().SetDirty();
+            chunk.buildLog("set dirty by set block and recompute");
         }
 	}
 
@@ -808,13 +824,17 @@ public class TerrainMap implements IBlockDataProvider
 	public synchronized Chunk lookupOrCreateChunkAtPosition(Coord3 chunkPos) {
         if (!ChunkCoordWithinWorldBounds(chunkPos)) return null;
         // Sets chunk at key if not there before. Returns previous value! (null if nothing was there)
-        Chunk result = chunks.putIfKeyIsAbsent(chunkPos, new Chunk(chunkPos, this));
         lock.lock();
+        Chunk result = null;
         try {
+        	result = chunks.putIfKeyIsAbsent(chunkPos, new Chunk(chunkPos, this));
         	// new chunk?
 	        if (result == null) {
 	            result = chunks.Get(chunkPos); // re-get the Chunk if it was null. now guaranteed to be there.
 	            if (VoxelLandscape.READ_CHUNKS_FROM_FILE) result.readFromFile(); // try to load the chunk from file
+	            //DBUG
+	            String formerBuildLog = debugBuildLogArchive.get(chunkPos);
+	            if (formerBuildLog != null) result.buildLog(formerBuildLog);
 	        }
         } finally {
         	lock.unlock();

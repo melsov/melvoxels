@@ -49,6 +49,8 @@ import voxel.landscape.settings.WorldSettings;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 // TODO: Separate world builder and game logic, everything else...
@@ -72,7 +74,8 @@ public class VoxelLandscape extends SimpleApplication
             DO_USE_TEST_GEOMETRY = false, 
             SHOULD_BUILD_CHUNK_MESH_ASYNC = true, 
             READ_CHUNKS_FROM_FILE = true,
-            DEBUG_DELETE_CURRENT_WORLD_DIR_ON_STARTUP = false;
+            WRITE_CHUNKS_TO_FILE = true,
+            DEBUG_DELETE_CURRENT_WORLD_DIR_ON_STARTUP = true;
 
     private WorldGenerator worldGenerator;
 	private TerrainMap terrainMap;
@@ -117,7 +120,8 @@ public class VoxelLandscape extends SimpleApplication
     public void simpleInitApp() 
     {
         terrainMap = new TerrainMap(this);
-        BufferUtils.setTrackDirectMemoryEnabled(true);
+        BufferUtils.setTrackDirectMemoryEnabled(false);
+        
         if (FORCE_WIRE_FRAME) {
             wireProcessor = new WireProcessor(assetManager);
             viewPort.addProcessor(wireProcessor);
@@ -162,8 +166,8 @@ public class VoxelLandscape extends SimpleApplication
     public static void main(String[] args) {
     	if (DEBUG_DELETE_CURRENT_WORLD_DIR_ON_STARTUP) FileUtil.DeleteCurrentWorldDirectory();
         VoxelLandscape app = new VoxelLandscape();
-        ScreenSettings(app, FULL_SCREEN); //<--- call new method here
-        app.start(); // start the game
+        ScreenSettings(app, FULL_SCREEN);
+        app.start(); 
     }
     private static void ScreenSettings(VoxelLandscape app, boolean fullScreen) {
         GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();

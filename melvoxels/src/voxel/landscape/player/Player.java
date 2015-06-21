@@ -34,7 +34,7 @@ public class Player
     private Node playerNode;
     private Node headNode;
 
-    public final Coord3 spawn = new Coord3(0,0,0);
+    public final Coord3 spawn = new Coord3(0,50,0);
 
     private static float height = 1.5f;
     private static float halfWidthXZ = .40f;
@@ -89,18 +89,23 @@ public class Player
                 toggleFlyMode();
             }
             else if (name.equals("UpArrow") && !keyPressed) {
-                app.nudgeInfoCamXZ(Direction.ZPOS);
+//                app.nudgeInfoCamXZ(Direction.ZPOS);
+                moveNextChunk(Direction.ZPOS);
             }
             else if (name.equals("DownArrow") && !keyPressed) {
-                app.nudgeInfoCamXZ(Direction.ZNEG);
+//                app.nudgeInfoCamXZ(Direction.ZNEG);
+                moveNextChunk(Direction.ZNEG);
             }
             else if (name.equals("RightArrow") && !keyPressed) {
-                app.nudgeInfoCamXZ(Direction.XNEG);
+//                app.nudgeInfoCamXZ(Direction.XNEG);
+                moveNextChunk(Direction.XNEG);
             }
             else if (name.equals("LeftArrow") && !keyPressed) {
-                app.nudgeInfoCamXZ(Direction.XPOS);
+//                app.nudgeInfoCamXZ(Direction.XPOS);
+                moveNextChunk(Direction.XPOS);
             }
             else if (name.equals("Inventory") && !keyPressed) {
+            	app.getWorldGenerator().debugForceMeshThisChunk(Chunk.ToChunkPosition(Coord3.FromVector3f(blockCursor.getLocalTranslation())));
             }
             else if (name.equals("ToggleInfoView") && !keyPressed) {
                 app.toggleInfoViewAxis(); //
@@ -499,7 +504,7 @@ public class Player
         } else {
             _terrainNode.addControl(playerControl);
         }
-    	playerNode.setLocalTranslation(new Vector3f(0,50,0));
+    	playerNode.setLocalTranslation(spawn.toVector3());
     }
 
     public void adjustCameraFrustum(Camera _camera) {

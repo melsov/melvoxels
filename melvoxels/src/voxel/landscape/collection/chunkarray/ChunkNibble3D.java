@@ -1,7 +1,13 @@
 package voxel.landscape.collection.chunkarray;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import voxel.landscape.Chunk;
 import voxel.landscape.coord.Coord3;
+import voxel.landscape.util.Asserter;
 
 /**
  * Created by didyouloseyourdog on 7/28/14.
@@ -16,6 +22,8 @@ public class ChunkNibble3D extends ChunkPrimitiveType3D {
      */
 
     private byte[] chunk = new byte[(Chunk.XLENGTH * Chunk.YLENGTH * Chunk.ZLENGTH) / 2];
+	private AtomicBoolean writeDirty = new AtomicBoolean(true);
+    // TODO: read/write methods
 
     @Override
     public void Set(int val, Coord3 pos) {
@@ -44,5 +52,31 @@ public class ChunkNibble3D extends ChunkPrimitiveType3D {
         }
     }
     
+    /*
+     * Read/Write
+     */
+    public void write(Path path) {
+        if (!writeDirty.get()) return;
+        try {
+            Files.write(path, chunk);
+            writeDirty.set(false);
+        } catch (IOException e) {
+            Asserter.assertFalseAndDie("failed to write ChunkNibble3D: " + path.toString());
+        }
+    }
+
+    public void read(Path path) {
+        if (!writeDirty.get()) return;
+        if (!Files.exists(path)) return;
+        try {
+            chunk = Files.readAllBytes(path);
+            writeDirty.set(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (chunk.length < (Chunk.XLENGTH * Chunk.YLENGTH * Chunk.ZLENGTH) / 2){
+        	chunk =  new byte [(Chunk.XLENGTH * Chunk.YLENGTH * Chunk.ZLENGTH) / 2];
+        }
+    }
 
 }

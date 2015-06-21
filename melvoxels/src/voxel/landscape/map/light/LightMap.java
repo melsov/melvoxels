@@ -1,9 +1,12 @@
 package voxel.landscape.map.light;
 
+import java.nio.file.Paths;
+
 import voxel.landscape.Chunk;
 import voxel.landscape.coord.Coord3;
 import voxel.landscape.collection.MapNibble3D;
 import voxel.landscape.collection.chunkarray.ChunkNibble3D;
+import voxel.landscape.fileutil.FileUtil;
 
 public class LightMap {
 
@@ -15,7 +18,7 @@ public class LightMap {
 	public boolean SetMaxLight(byte light, int x, int y, int z) {
 		Coord3 chunkPos = Chunk.ToChunkPosition(x, y, z);
 		Coord3 localPos = Chunk.ToChunkLocalCoord(x, y, z);
-        ChunkNibble3D chunk = lights.GetChunkInstance(chunkPos);
+        ChunkNibble3D chunk = getChunkInstance(chunkPos);
 		byte oldLight = (byte) chunk.Get(localPos);
 		if(oldLight < light) {
 			chunk.Set(light, localPos);
@@ -44,9 +47,17 @@ public class LightMap {
 		return light;
 	}
 	public byte GetLight(Coord3 chunkPos, Coord3 localPos) {
-		byte light = (byte) lights.GetChunkInstance(chunkPos).Get(localPos);
+		byte light = (byte) getChunkInstance(chunkPos).Get(localPos);
 		if(light < LightComputer.MIN_LIGHT) return LightComputer.MIN_LIGHT;
 		return light;
+	}
+	private ChunkNibble3D getChunkInstance(Coord3 chunkPos) {
+		ChunkNibble3D result = lights.GetChunk(chunkPos);
+		if (result == null) {
+			result = lights.GetChunkInstance(chunkPos);
+			result.read(Paths.get(FileUtil.LightFile(chunkPos)));
+		}
+		return result; //lights.GetChunkInstance(chunkPos);
 	}
 
     /*

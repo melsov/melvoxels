@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+import static voxel.landscape.player.B.*;
 /**
  * Created by didyouloseyourdog on 10/9/14.
  * The fourth 'D' is time
@@ -48,6 +48,9 @@ public class FloodFill4D implements Runnable
     private final FloodFill floodFill;
 	private final FloodFillBoss floodFillBoss;
     private static int instanceCount = 0;
+    
+    //CONSIDER: keep a set of chunk coords 'under consideration' (possibly to be flooded)
+    // protect these against removal? (assumes we know our problem)
 
     public FloodFill4D(
     		TerrainMap _map, 
@@ -99,7 +102,12 @@ public class FloodFill4D implements Runnable
         	try { floodFilledChunkCoords.put(chunkCoord); } catch (InterruptedException e) { e.printStackTrace(); } return; 
         }
 
-        Chunk chunk = map.getChunk(chunkCoord);
+        Chunk chunk = map.lookupOrCreateChunkAtPosition(chunkCoord); // map.getChunk(chunkCoord);
+        if (chunk == null) { //DBUG
+        	Chunk nully = map.lookupOrCreateChunkAtPosition(chunkCoord);
+        	bugln("found null chunk in FF4D"); //TODO: save build log.
+        	bug(nully.toString());
+        }
         Asserter.assertChunkNotNull(chunk, chunkCoord);
         boolean originalChunkCoordWasNeverAdded = chunk.chunkFloodFillSeedSet.size() == 0;
 

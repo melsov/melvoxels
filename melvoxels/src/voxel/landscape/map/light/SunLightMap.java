@@ -42,7 +42,7 @@ public class SunLightMap
 		
 		if( IsSunLight(chunkPos, localPos, y) ) return false;
 
-        ChunkNibble3D chunkLightMap = lights.GetChunkInstance(chunkPos);
+        ChunkNibble3D chunkLightMap = getChunkInstance(chunkPos);// lights.GetChunkInstance(chunkPos);
 		if(chunkLightMap.Get(localPos) < light) {
 			chunkLightMap.Set(light, localPos);
 			return true;
@@ -60,7 +60,7 @@ public class SunLightMap
 		lights.Set(light, x, y, z);
 	}
 	public void SetLight(byte light, Coord3 chunkPos, Coord3 localPos) {
-		lights.GetChunkInstance(chunkPos).Set(light, localPos);
+		getChunkInstance(chunkPos).Set(light, localPos);
 	}
 	/*
 	 * Get
@@ -82,6 +82,14 @@ public class SunLightMap
 			return (byte) Math.max(SunLightComputer.MIN_LIGHT, light);
 		}
 		return SunLightComputer.MIN_LIGHT;
+	}
+	private ChunkNibble3D getChunkInstance(Coord3 chunkPos) {
+		ChunkNibble3D result = lights.GetChunk(chunkPos);
+		if (result == null) {
+			result = lights.GetChunkInstance(chunkPos);
+			result.read(Paths.get(FileUtil.SunlightFile(chunkPos)));
+		}
+		return lights.GetChunkInstance(chunkPos);
 	}
     /*
      * Remove
@@ -118,9 +126,13 @@ public class SunLightMap
     public void readLightsFromFile(Coord3 c) {
         // TODO: consider making lights storage with a hashmap or something else that expands according to need
         // TODO: alternately: turn into hash map before saving? (TODO: test speeds of fileIO strategies)
-        Asserter.assertFalseAndDie("don't read lights yet. ");
+        Asserter.assertFalseAndDie("don't read lights here... ");
     }
     public void writeLightsToFile(Coord3 c) {
+    	ChunkNibble3D chunkLightMap = lights.GetChunk(c);
+    	if (chunkLightMap != null) {
+    		chunkLightMap.write(Paths.get(FileUtil.SunlightFile(c)));
+    	}
         Asserter.assertFalseAndDie("don't write lights yet. ");
     }
 

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class FloodFillBoss {
 
-    public static final int THREAD_COUNT = 8;
+    public static final int THREAD_COUNT = 1;
 	public final List<FloodFill4D> floodFills;
 	public final BlockingQueue<Coord3> floodFilledChunkCoords = new ArrayBlockingQueue<Coord3>(456);
     private String threadName;

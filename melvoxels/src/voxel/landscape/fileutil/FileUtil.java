@@ -8,7 +8,8 @@ import voxel.landscape.util.Asserter;
 
 import java.io.*;
 import java.util.Random;
-
+import java.util.logging.Logger;
+import static voxel.landscape.player.B.*;
 /**
  * Created by didyouloseyourdog on 4/5/15.
  */
@@ -197,7 +198,9 @@ public class FileUtil {
     }
     
     public static boolean DeleteCurrentWorldDirectory() {
-    	return deleteDirectory(new File(WorldDirectory()) );
+    	boolean result = deleteDirectory(new File(WorldDirectory()) );
+    	bug("deleting directory: " + WorldDirectory() + (result? " SUCESS" : "FAILURE") + "\n");
+    	return result;
     }
     
     private static boolean deleteDirectory(File directory) {
